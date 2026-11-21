@@ -1,0 +1,16 @@
+# Local SQLite database (local Python app only — not used on Vercel)
+ubold.db
+ubold.db-journal
+ubold.db-wal
+ubold.db-shm
+
+# Node / Vercel
+node_modules/
+.vercel/
+.env
+.env.local
+.env*.local
+
+# Python
+__pycache__/
+*.pyc

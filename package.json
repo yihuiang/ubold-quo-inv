@@ -1,0 +1,10 @@
+{
+  "name": "ubold-quote-invoice",
+  "version": "1.0.0",
+  "description": "UBOLD Design Lab — Quotation & Invoice system (Vercel + Turso)",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  }
+}

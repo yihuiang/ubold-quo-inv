@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UBOLD Design Lab — Quotation & Invoice</title>
+<style>
+  /* ============ THEME ============ */
+  :root{
+    --ink:#1a1a1a;
+    --ink-soft:#4a4a4a;
+    --line:#d8d8d8;
+    --line-strong:#1a1a1a;
+    --accent:#e8552d;      /* UBOLD warm accent */
+    --accent-soft:#fdeee9;
+    --paper:#ffffff;
+    --bg:#52555c;
+    --field:#fbfbf9;
+    --field-focus:#fff7f4;
+    --ok:#1f8a4c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    color:var(--ink);
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+
+  /* ============ TOOLBAR ============ */
+  .toolbar{
+    position:sticky;top:0;z-index:50;
+    background:#23262b;color:#fff;
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px;
+    padding:10px 16px;border-bottom:2px solid var(--accent);
+  }
+  .toolbar .brand{font-weight:800;letter-spacing:.14em;font-size:14px;margin-right:6px;}
+  .toolbar .brand span{color:var(--accent);}
+  .seg{display:inline-flex;background:#15171a;border-radius:8px;padding:3px;}
+  .seg button{
+    background:transparent;color:#cfcfcf;border:0;padding:7px 16px;
+    font-weight:700;font-size:12.5px;letter-spacing:.04em;border-radius:6px;cursor:pointer;
+  }
+  .seg button.active{background:var(--accent);color:#fff;}
+  .tbtn{
+    background:#3a3e45;color:#fff;border:1px solid #4d525b;border-radius:7px;
+    padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center;
+  }
+  .tbtn:hover{background:#464b53;}
+  .tbtn.primary{background:var(--accent);border-color:var(--accent);}
+  .tbtn.primary:hover{background:#d4481f;}
+  .tbtn.ghost{background:transparent;}
+  .spacer{flex:1;}
+  .hint{font-size:11.5px;color:#9aa0a8;margin-left:4px;}
+  select.tsel{background:#3a3e45;color:#fff;border:1px solid #4d525b;border-radius:7px;padding:7px 9px;font-size:12.5px;max-width:170px;}
+
+  /* ============ PAGE / PAPER ============ */
+  .work{padding:26px 14px 80px;display:flex;flex-direction:column;align-items:center;gap:22px;}
+  .page{
+    background:var(--paper);width:210mm;min-height:297mm;
+    padding:16mm 15mm 14mm;position:relative;
+    box-shadow:0 6px 30px rgba(0,0,0,.35);
+    display:flex;flex-direction:column;
+  }
+
+  /* ---- editable fields ---- */
+  .f{
+    font:inherit;color:inherit;border:0;background:var(--field);
+    border-bottom:1px dashed #c7c7c7;border-radius:3px 3px 0 0;
+    padding:1px 4px;width:100%;
+  }
+  .f:focus{outline:0;background:var(--field-focus);border-bottom-color:var(--accent);}
+  textarea.f{resize:none;overflow:hidden;line-height:1.35;border-radius:3px;border:1px dashed #d0d0d0;}
+  .f.r{text-align:right;}
+  .f.c{text-align:center;}
+
+  /* ============ DOC HEADER ============ */
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;}
+  .logo .mark{font-size:30px;font-weight:800;letter-spacing:.06em;line-height:1;}
+  .logo .mark b{color:var(--accent);}
+  .logo .logo-img{width:150px;height:auto;display:block;}
+  .logo .sub{font-size:10.5px;letter-spacing:.42em;color:var(--ink-soft);margin-top:5px;font-weight:600;}
+  .logo .reg{font-size:9px;color:#8a8a8a;margin-top:7px;line-height:1.4;}
+  .doctitle{
+    text-align:right;
+  }
+  .doctitle h1{
+    margin:0 0 8px;font-size:34px;font-weight:800;letter-spacing:.12em;color:var(--accent);
+  }
+  .metatable{font-size:11px;border-collapse:collapse;margin-left:auto;}
+  .metatable td{padding:2px 0;vertical-align:top;}
+  .metatable td.k{color:var(--ink-soft);font-weight:600;padding-right:6px;white-space:nowrap;}
+  .metatable td.c{padding:0 5px;color:var(--ink-soft);}
+  .metatable td.v{min-width:118px;}
+  .metatable .f{font-size:11px;padding:0 3px;}
+
+  .rule{height:2px;background:var(--line-strong);margin:14px 0 12px;}
+
+  /* ============ INTRO + BILLTO ============ */
+  .intro{font-size:11.5px;line-height:1.5;color:var(--ink);}
+  .intro textarea.f{font-size:11.5px;}
+  .billrow{display:flex;justify-content:space-between;gap:24px;margin-top:10px;}
+  .billto{flex:1;}
+  .billto .lbl{font-size:9.5px;letter-spacing:.18em;color:var(--accent);font-weight:700;margin-bottom:4px;}
+  .billto .co{font-size:13px;font-weight:800;}
+  .billto .f{font-size:11px;}
+  .billto .line{font-size:11px;line-height:1.5;}
+
+  /* ============ ITEMS TABLE ============ */
+  table.items{width:100%;border-collapse:collapse;margin-top:14px;font-size:11px;}
+  table.items thead th{
+    background:var(--ink);color:#fff;font-weight:700;font-size:10px;letter-spacing:.04em;
+    padding:7px 8px;text-align:left;
+  }
+  table.items thead th small{display:block;font-weight:500;font-size:8.5px;color:#cfcfcf;letter-spacing:.02em;}
+  table.items thead th.n{text-align:center;}
+  table.items thead th.r{text-align:right;}
+  table.items tbody td{
+    border-bottom:1px solid var(--line);padding:5px 8px;vertical-align:top;
+  }
+  table.items tbody tr:nth-child(even) td{background:#fcfcfb;}
+  .col-no{width:28px;text-align:center;color:var(--ink-soft);}
+  .col-qty{width:46px;}
+  .col-uom{width:62px;}
+  .col-price{width:78px;}
+  .col-disc{width:66px;}
+  .col-total{width:86px;}
+  .col-act{width:26px;}
+  td .f{background:transparent;border-bottom:1px solid transparent;}
+  td .f:hover{background:var(--field);}
+  td .f:focus{background:var(--field-focus);border-bottom:1px dashed var(--accent);}
+  td.total-cell{text-align:right;font-weight:700;white-space:nowrap;padding-top:7px;}
+  .rowdel{border:0;background:transparent;color:#c33;cursor:pointer;font-size:14px;line-height:1;padding:2px;}
+  .foc-tag{display:inline-block;font-size:9px;font-weight:700;color:var(--accent);
+    background:var(--accent-soft);border-radius:3px;padding:1px 5px;cursor:pointer;user-select:none;}
+  .desc-ta{font-size:11px;font-weight:600;}
+  .additem{margin-top:8px;}
+  .mini{background:var(--accent-soft);color:var(--accent);border:1px dashed var(--accent);
+    border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;}
+
+  /* ============ TOTALS ============ */
+  .totwrap{display:flex;justify-content:space-between;gap:24px;margin-top:4px;}
+  .words{flex:1;font-size:11px;align-self:flex-end;}
+  .words .wlbl{font-size:9px;letter-spacing:.14em;color:var(--ink-soft);font-weight:700;margin-bottom:3px;}
+  .words .wval{font-weight:700;text-transform:uppercase;line-height:1.4;}
+  .totals{width:270px;font-size:11.5px;}
+  .totals .trow{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line);}
+  .totals .trow .tk{color:var(--ink-soft);}
+  .totals .trow .tv{font-weight:700;white-space:nowrap;}
+  .totals .trow.grand{border-bottom:0;background:var(--ink);color:#fff;margin-top:6px;padding:9px 12px;border-radius:4px;}
+  .totals .trow.grand .tk{color:#fff;font-weight:700;letter-spacing:.04em;}
+  .totals .trow.grand .tv{font-size:14px;}
+  .totals .adv .tv{color:var(--accent);}
+
+  /* ============ FOOTER BLOCKS ============ */
+  .footcontact{margin-top:auto;padding-top:14px;}
+  .contactbar{display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--line-strong);padding-top:8px;font-size:9.5px;color:var(--ink-soft);gap:12px;flex-wrap:wrap;}
+  .contactbar .c1{font-weight:800;color:var(--ink);letter-spacing:.06em;font-size:11px;}
+  .contactbar .ci{display:flex;gap:14px;flex-wrap:wrap;}
+  .pagenum{text-align:center;font-size:9px;color:#9a9a9a;margin-top:6px;}
+
+  /* ===== PAGE 2 — terms ===== */
+  .terms h3{font-size:12px;color:var(--accent);margin:14px 0 4px;letter-spacing:.04em;text-transform:uppercase;}
+  .terms p, .terms textarea.f{font-size:10px;line-height:1.55;color:var(--ink-soft);margin:0 0 6px;}
+  .bankbox{border:1.5px solid var(--ink);border-radius:6px;padding:10px 14px;font-size:11px;margin-top:8px;background:#fafafa;}
+  .bankbox .bt{font-weight:800;margin-bottom:4px;font-size:10px;letter-spacing:.08em;}
+  .bankbox .brow{display:flex;gap:6px;padding:1px 0;}
+  .bankbox .brow .bk{width:110px;color:var(--ink-soft);}
+  .bankbox .brow .bv{font-weight:700;}
+  .sign{display:flex;justify-content:space-between;gap:40px;margin-top:34px;}
+  .sigbox{flex:1;text-align:center;}
+  .sigline{border-top:1.4px solid var(--ink);margin-top:40px;padding-top:5px;font-size:10px;font-weight:700;}
+  .sigbox .sigsub{font-size:9px;color:var(--ink-soft);}
+  .thanks{text-align:center;font-size:12px;font-weight:700;color:var(--accent);margin-top:26px;}
+  .confirm{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.5;}
+
+  /* Hide only the inactive mode's blocks; active ones keep their natural display. */
+  body.mode-quotation .inv-only{display:none !important;}
+  body.mode-invoice .qt-only{display:none !important;}
+
+  /* ============ PRINT ============ */
+  @page{size:A4;margin:0;}
+  @media print{
+    body{background:#fff;}
+    .toolbar,.no-print,.additem,.rowdel,.col-act{display:none !important;}
+    .work{padding:0;gap:0;}
+    .page{box-shadow:none;width:210mm;min-height:297mm;page-break-after:always;margin:0;}
+    .page:last-child{page-break-after:auto;}
+    .f,textarea.f{background:transparent !important;border-color:transparent !important;}
+    td .f:hover{background:transparent;}
+    table.items thead th{-webkit-print-color-adjust:exact;}
+  }
+  @media(max-width:850px){
+    .page{width:100%;min-height:auto;padding:18px 14px;}
+    .toolbar{gap:6px;}
+  }
+</style>
+</head>
+<body class="mode-quotation">
+
+<div class="toolbar no-print">
+  <div class="brand">U<span>B</span>OLD</div>
+  <div class="seg">
+    <button id="segQT" class="active" onclick="setMode('quotation')">QUOTATION</button>
+    <button id="segINV" onclick="setMode('invoice')">INVOICE</button>
+  </div>
+  <button class="tbtn primary" onclick="window.print()">⎙ Print / Save PDF</button>
+  <button class="tbtn" onclick="saveDoc()">💾 Save</button>
+  <select class="tsel" id="savedList" onchange="loadDoc(this.value)" title="Open a saved document">
+    <option value="">Saved documents…</option>
+  </select>
+  <button class="tbtn ghost" onclick="deleteDoc()" title="Delete the open saved document">🗑</button>
+  <div class="spacer"></div>
+  <button class="tbtn" onclick="exportJSON()">↓ Export</button>
+  <button class="tbtn" onclick="document.getElementById('importFile').click()">↑ Import</button>
+  <input type="file" id="importFile" accept="application/json" class="no-print" style="display:none" onchange="importJSON(event)">
+  <button class="tbtn" onclick="newDoc()">＋ New blank</button>
+  <span class="hint" id="saveState"></span>
+</div>
+
+<div class="work">
+
+  <!-- ================= PAGE 1 ================= -->
+  <div class="page" id="page1">
+    <div class="head">
+      <div class="logo">
+        <img src="ubold-logo.png" alt="UBOLD" class="logo-img">
+        <div class="sub">DESIGN&nbsp;LAB</div>
+        <div class="reg">202603238260<br>(003886944-A)</div>
+      </div>
+      <div class="doctitle">
+        <h1 id="docTitle">QUOTATION</h1>
+        <table class="metatable">
+          <tr><td class="k" id="noLabel">Quotation No</td><td class="c">:</td><td class="v"><input class="f" data-k="docNo" value="QT-004"></td></tr>
+          <tr><td class="k">Customer ID</td><td class="c">:</td><td class="v"><input class="f" data-k="custId" value="CI-004"></td></tr>
+          <tr><td class="k">Date</td><td class="c">:</td><td class="v"><input class="f" data-k="date" value="18/11/2026"></td></tr>
+          <tr><td class="k">Page</td><td class="c">:</td><td class="v"><input class="f" data-k="page" value="1 of 2"></td></tr>
+          <tr class="inv-only"><td class="k">Ref. Quotation</td><td class="c">:</td><td class="v"><input class="f" data-k="refQt" value="QT-004"></td></tr>
+          <tr><td class="k">Term</td><td class="c">:</td><td class="v"><input class="f" data-k="term" value="50% Advance"></td></tr>
+          <tr class="inv-only"><td class="k">Balance Due</td><td class="c">:</td><td class="v"><input class="f" data-k="termBal" value="MYR 500.00"></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="intro">
+      <div style="font-weight:700;margin-bottom:4px"><input class="f" data-k="greeting" value="Dear Ms. Jin Qi" style="width:auto;min-width:240px;display:inline-block"></div>
+      <textarea class="f auto" data-k="introBody" rows="2">Thank you for your interest in our service. We are pleased to provide you with the following quotation based on your requirements. Please find the details below:</textarea>
+    </div>
+
+    <div class="billrow">
+      <div class="billto">
+        <div class="lbl">BILL TO</div>
+        <div class="co"><input class="f" data-k="clientCo" value="VJ FOOD ENTERPRISE  德食品企業"></div>
+        <input class="f line" data-k="clientName" value="Ms. Loh Jin Qi">
+        <input class="f line" data-k="clientTin" value="NRIC/TIN: 031122010912">
+        <input class="f line" data-k="clientPhone" value="+60 14-380 4300">
+        <textarea class="f auto line" data-k="clientAddr" rows="2">18, Jalan Bakawali, Taman Selatan, 83700, Yong Peng, Johor</textarea>
+      </div>
+    </div>
+
+    <table class="items">
+      <thead>
+        <tr>
+          <th class="col-no n">No</th>
+          <th>Item Description</th>
+          <th class="col-qty n">Qty</th>
+          <th class="col-uom n">UOM</th>
+          <th class="col-price r">U/Price<small>MYR</small></th>
+          <th class="col-disc r">Disc</th>
+          <th class="col-total r">Total<small>MYR</small></th>
+          <th class="col-act no-print"></th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody"></tbody>
+    </table>
+    <div class="additem no-print"><button class="mini" onclick="addRow()">＋ Add item</button></div>
+
+    <div class="totwrap">
+      <div class="words">
+        <div class="wlbl">AMOUNT IN WORDS</div>
+        <div class="wval" id="amountWords">RINGGIT MALAYSIA ONE THOUSAND ONLY.</div>
+      </div>
+      <div class="totals">
+        <div class="trow"><span class="tk">Subtotal</span><span class="tv" id="subtotal">MYR 1,000.00</span></div>
+        <div class="trow inv-only adv"><span class="tk">Less: Advance Paid (50%)</span><span class="tv" id="advanceVal">(MYR 500.00)</span></div>
+        <div class="trow grand"><span class="tk" id="grandLabel">TOTAL</span><span class="tv" id="grandTotal">MYR 1,000.00</span></div>
+      </div>
+    </div>
+
+    <div class="footcontact">
+      <div class="contactbar">
+        <div class="c1">UBOLD DESIGN LAB</div>
+        <div class="ci">
+          <span>✉ info@ubolddesign.com</span>
+          <span>🌐 www.ubolddesign.com</span>
+          <span>✆ +60 17-352 1620</span>
+          <span>@ubold_design</span>
+        </div>
+      </div>
+      <div class="pagenum">Page 1 of 2</div>
+    </div>
+  </div>
+
+  <!-- ================= PAGE 2 ================= -->
+  <div class="page terms" id="page2">
+    <div class="head">
+      <div class="logo">
+        <img src="ubold-logo.png" alt="UBOLD" class="logo-img">
+        <div class="sub">DESIGN&nbsp;LAB</div>
+      </div>
+      <div class="doctitle">
+        <table class="metatable">
+          <tr><td class="k" id="noLabel2">Quotation No</td><td class="c">:</td><td class="v" id="docNo2">QT-004</td></tr>
+          <tr><td class="k">Customer ID</td><td class="c">:</td><td class="v" id="custId2">CI-004</td></tr>
+          <tr><td class="k">Date</td><td class="c">:</td><td class="v" id="date2">18/11/2026</td></tr>
+          <tr><td class="k">Page</td><td class="c">:</td><td class="v">2 of 2</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="rule"></div>
+
+    <h3>Terms &amp; Conditions</h3>
+    <textarea class="f auto" data-k="tncTerms" rows="6">This quotation is a cost estimate only and is not a formal invoice. It is valid for 30 days from the date of issue, and prices may change after it expires. A non-refundable 50% advance payment is due when the quotation is accepted. It confirms your booking and secures our team's time, and work begins once we receive it. The remaining 50% is due when the work is complete, and all final files and assets will be released to the client once full payment is received. Work will be delivered by the Delivery Date stated in this quotation, as long as the advance payment and all required materials reach us on time. Late materials or late feedback may push the Delivery Date back. Each item includes up to 3 rounds of revisions, and any further revisions will be charged separately. Additional scope requests may change the final price and Delivery Date. For any enquiries, please contact us at admin@ubolddesign.com or WhatsApp at +60 17-352 1620.</textarea>
+
+    <h3>Copyright</h3>
+    <textarea class="f auto" data-k="tncCopyright" rows="4">UBOLD Design team retains full copyright ownership of all original designs, artwork, and creative materials produced for this project. Upon receipt of final payment, the Client receives exclusive rights to use these designs for their business purposes, including but not limited to: branding, packaging, social media, marketing materials, and product launches. The Client may not resell, redistribute, or license the designs to third parties without prior written consent from UBOLD Design team.</textarea>
+
+    <h3>Payment Note</h3>
+    <div class="bankbox">
+      <div class="bt">ALL PAYMENT SHOULD BE CROSSED AND MADE PAYABLE TO —</div>
+      <div class="brow"><span class="bk">Bank</span><span class="bv"><input class="f" data-k="bankName" value="Maybank" style="width:200px"></span></div>
+      <div class="brow"><span class="bk">Account holder</span><span class="bv"><input class="f" data-k="bankHolder" value="NG WEN KAI" style="width:200px"></span></div>
+      <div class="brow"><span class="bk">Account number</span><span class="bv"><input class="f" data-k="bankAcc" value="112884137153" style="width:200px"></span></div>
+      <div style="margin-top:6px;font-size:10px;color:var(--ink-soft)">Please share the bankslip once the payment is made.</div>
+    </div>
+
+    <!-- Quotation: acknowledgement -->
+    <div class="qt-only">
+      <div class="confirm">We confirm the order by accepting the terms &amp; conditions stated above. Please acknowledge and return this quotation.</div>
+      <div class="sign">
+        <div class="sigbox">
+          <div class="sigsub" style="text-align:left;margin-bottom:28px">Signature &amp; Chop<br>Person in charge:<br>Date:</div>
+          <div class="sigline">Client Acceptance</div>
+        </div>
+        <div class="sigbox">
+          <div class="sigline">Authorised Signature &amp; Company Stamp</div>
+          <div class="sigsub">UBOLD DESIGN LAB</div>
+        </div>
+      </div>
+      <div class="thanks">Thank you for your business. We appreciate the opportunity to work with you :D</div>
+    </div>
+
+    <!-- Invoice: closing -->
+    <div class="inv-only">
+      <div class="sign">
+        <div class="sigbox"></div>
+        <div class="sigbox">
+          <div class="sigline">Authorised Signature &amp; Company Stamp</div>
+          <div class="sigsub">UBOLD DESIGN LAB</div>
+        </div>
+      </div>
+      <div class="thanks">Thank you for your business!<br>We'd love the chance to work with you again soon!</div>
+    </div>
+
+    <div class="footcontact">
+      <div class="contactbar">
+        <div class="c1">UBOLD DESIGN LAB</div>
+        <div class="ci">
+          <span>✉ info@ubolddesign.com</span>
+          <span>🌐 www.ubolddesign.com</span>
+          <span>✆ +60 17-352 1620</span>
+          <span>@ubold_design</span>
+        </div>
+      </div>
+      <div class="pagenum">Page 2 of 2</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   UBOLD Quotation & Invoice generator
+   ============================================================ */
+const INTRO_QT = "Thank you for your interest in our service. We are pleased to provide you with the following quotation based on your requirements. Please find the details below:";
+const INTRO_INV = "It's been a pleasure bringing your vision to life! Our project is now wrapped up and delivered, and we couldn't be happier with how it turned out. Please find the final invoice for the remaining balance below — and if you've already sent it through, please disregard this note with our thanks!";
+
+let mode = 'quotation';
+
+/* ---------- line items ---------- */
+function rowHTML(d={}){
+  const desc = d.desc!==undefined? d.desc : "PACKAGE A: LOGO DESIGN\nMain logo + 2 concept options\nDelivery date: Week of 19th October 2026";
+  const qty  = d.qty!==undefined? d.qty : 1;
+  const uom  = d.uom!==undefined? d.uom : "SET";
+  const price= d.price!==undefined? d.price : 1000;
+  const disc = d.disc!==undefined? d.disc : 0;
+  const foc  = d.foc? true:false;
+  return `<tr class="itemrow" data-foc="${foc}">
+    <td class="col-no n"><span class="rowno"></span></td>
+    <td><textarea class="f auto desc-ta" rows="1">${escapeHtml(desc)}</textarea></td>
+    <td class="col-qty"><input class="f c qty" value="${qty}"></td>
+    <td class="col-uom"><input class="f c uom" value="${escapeHtml(uom)}"></td>
+    <td class="col-price"><input class="f r price" value="${price}"></td>
+    <td class="col-disc r">
+      <input class="f r disc" value="${disc}" style="${foc?'display:none':''}">
+      <span class="foc-tag" title="Click: toggle Free of Charge" onclick="toggleFoc(this)">${foc?'F.O.C.':'FOC?'}</span>
+    </td>
+    <td class="total-cell"><span class="linetotal">0.00</span></td>
+    <td class="col-act no-print"><button class="rowdel" onclick="delRow(this)" title="Remove">✕</button></td>
+  </tr>`;
+}
+function addRow(d){ document.getElementById('itemsBody').insertAdjacentHTML('beforeend', rowHTML(d||{desc:"",qty:1,uom:"",price:0,disc:0})); bind(); recalc(); deferAutosize(); }
+function delRow(btn){ btn.closest('tr').remove(); recalc(); autosaveFlag(); }
+function toggleFoc(tag){
+  const tr=tag.closest('tr'); const foc = tr.getAttribute('data-foc')!=='true';
+  tr.setAttribute('data-foc', foc);
+  const disc=tr.querySelector('.disc');
+  disc.style.display = foc? 'none':'';
+  tag.textContent = foc? 'F.O.C.':'FOC?';
+  recalc(); autosaveFlag();
+}
+
+/* ---------- calculations ---------- */
+function num(v){ v=(''+v).replace(/[^0-9.\-]/g,''); const n=parseFloat(v); return isNaN(n)?0:n; }
+function money(n){ return n.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function recalc(){
+  let subtotal=0;
+  document.querySelectorAll('#itemsBody tr').forEach((tr,i)=>{
+    tr.querySelector('.rowno').textContent = i+1;
+    const foc = tr.getAttribute('data-foc')==='true';
+    const qty=num(tr.querySelector('.qty').value);
+    const price=num(tr.querySelector('.price').value);
+    const disc=num(tr.querySelector('.disc').value);
+    let total = foc? 0 : (qty*price - disc);
+    if(total<0) total=0;
+    tr.querySelector('.linetotal').textContent = foc? '0.00' : money(total);
+    subtotal += total;
+  });
+  document.getElementById('subtotal').textContent = 'MYR '+money(subtotal);
+
+  let grand = subtotal;
+  if(mode==='invoice'){
+    // advance = half of the ORIGINAL job (subtotal is remaining? no—template: subtotal is full, advance subtracted)
+    const advInput = getField('termBal'); // not used for calc
+    const advance = subtotal*0.5;
+    document.getElementById('advanceVal').textContent = '(MYR '+money(advance)+')';
+    grand = subtotal - advance;
+    document.getElementById('grandLabel').textContent = 'BALANCE DUE';
+    setField('termBal','MYR '+money(grand), true);
+  } else {
+    document.getElementById('grandLabel').textContent = 'TOTAL';
+    grand = subtotal;
+  }
+  document.getElementById('grandTotal').textContent = 'MYR '+money(grand);
+  document.getElementById('amountWords').textContent = ringgitWords(grand);
+  syncPage2();
+}
+
+/* ---------- number to words (MYR) ---------- */
+function ringgitWords(amount){
+  const ringgit=Math.floor(amount);
+  const sen=Math.round((amount-ringgit)*100);
+  let s='RINGGIT MALAYSIA '+words(ringgit);
+  if(sen>0) s+=' AND '+words(sen)+' SEN';
+  return (s+' ONLY.').toUpperCase().replace(/\s+/g,' ').trim();
+}
+function words(n){
+  if(n===0) return 'ZERO';
+  const ones=['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN',
+    'ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'];
+  const tens=['','','TWENTY','THIRTY','FORTY','FIFTY','SIXTY','SEVENTY','EIGHTY','NINETY'];
+  function below1000(x){
+    let r='';
+    if(x>=100){ r+=ones[Math.floor(x/100)]+' HUNDRED'; x%=100; if(x) r+=' '; }
+    if(x>=20){ r+=tens[Math.floor(x/10)]; x%=10; if(x) r+='-'+ones[x]; }
+    else if(x>0){ r+=ones[x]; }
+    return r;
+  }
+  let r='';
+  const scales=[['MILLION',1000000],['THOUSAND',1000]];
+  for(const [name,val] of scales){
+    if(n>=val){ r+=below1000(Math.floor(n/val))+' '+name+' '; n%=val; }
+  }
+  if(n>0) r+=below1000(n);
+  return r.trim();
+}
+
+/* ---------- mode toggle ---------- */
+function setMode(m){
+  mode=m;
+  document.body.className='mode-'+m;
+  document.getElementById('segQT').classList.toggle('active',m==='quotation');
+  document.getElementById('segINV').classList.toggle('active',m==='invoice');
+  const isInv = m==='invoice';
+  document.getElementById('docTitle').textContent = isInv?'INVOICE':'QUOTATION';
+  document.getElementById('noLabel').textContent = isInv?'Invoice No':'Quotation No';
+  document.getElementById('noLabel2').textContent = isInv?'Invoice No':'Quotation No';
+  // swap intro default only if it still matches the other mode's default
+  const introEl=document.querySelector('[data-k="introBody"]');
+  if(introEl.value.trim()===INTRO_QT || introEl.value.trim()===INTRO_INV){
+    introEl.value = isInv?INTRO_INV:INTRO_QT; autoSize(introEl);
+  }
+  recalc(); autosaveFlag();
+}
+
+/* ---------- page-2 mirror ---------- */
+function syncPage2(){
+  document.getElementById('docNo2').textContent = getField('docNo');
+  document.getElementById('custId2').textContent = getField('custId');
+  document.getElementById('date2').textContent = getField('date');
+}
+function getField(k){ const el=document.querySelector(`[data-k="${k}"]`); return el?el.value:''; }
+function setField(k,v,silent){ const el=document.querySelector(`[data-k="${k}"]`); if(el && el.value!==v){ el.value=v; if(!silent) autosaveFlag(); } }
+
+/* ---------- textarea autosize ---------- */
+function autoSize(el){ el.style.height='auto'; el.style.height=(el.scrollHeight)+'px'; }
+function autosizeAll(){ document.querySelectorAll('textarea.auto').forEach(autoSize); }
+function deferAutosize(){
+  requestAnimationFrame(()=>requestAnimationFrame(autosizeAll));
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(autosizeAll);
+}
+
+/* ---------- binding ---------- */
+function bind(){
+  document.querySelectorAll('textarea.auto').forEach(t=>{ t.oninput=()=>{autoSize(t);}; });
+  document.querySelectorAll('#itemsBody input, #itemsBody textarea').forEach(el=>{
+    el.oninput=()=>{ recalc(); autosaveFlag(); };
+  });
+  document.querySelectorAll('[data-k]').forEach(el=>{
+    el.addEventListener('input',()=>{ syncPage2(); autosaveFlag(); });
+  });
+}
+
+/* ============================================================
+   SAVE / LOAD  (localStorage)
+   ============================================================ */
+const LS_KEY='ubold_docs_v1';
+let currentName='';
+
+function collect(){
+  const fields={};
+  document.querySelectorAll('[data-k]').forEach(el=> fields[el.dataset.k]=el.value);
+  const items=[...document.querySelectorAll('#itemsBody tr')].map(tr=>({
+    desc:tr.querySelector('.desc-ta').value,
+    qty:tr.querySelector('.qty').value,
+    uom:tr.querySelector('.uom').value,
+    price:tr.querySelector('.price').value,
+    disc:tr.querySelector('.disc').value,
+    foc:tr.getAttribute('data-foc')==='true'
+  }));
+  return {mode,fields,items,savedAt:new Date().toISOString()};
+}
+function apply(data){
+  setMode(data.mode||'quotation');
+  Object.entries(data.fields||{}).forEach(([k,v])=>{ const el=document.querySelector(`[data-k="${k}"]`); if(el) el.value=v; });
+  document.getElementById('itemsBody').innerHTML='';
+  (data.items||[]).forEach(it=>document.getElementById('itemsBody').insertAdjacentHTML('beforeend',rowHTML(it)));
+  bind(); recalc();
+  deferAutosize();
+}
+function allDocs(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{};}catch(e){return{};} }
+function refreshList(){
+  const docs=allDocs(); const sel=document.getElementById('savedList');
+  sel.innerHTML='<option value="">Saved documents…</option>';
+  Object.keys(docs).sort().reverse().forEach(name=>{
+    const o=document.createElement('option'); o.value=name; o.textContent=name; sel.appendChild(o);
+  });
+  sel.value=currentName||'';
+}
+function saveDoc(){
+  const suggested = currentName || (getField('docNo')||'Untitled');
+  const name=prompt('Save as (document name):',suggested);
+  if(!name) return;
+  const docs=allDocs(); docs[name]=collect();
+  try{ localStorage.setItem(LS_KEY,JSON.stringify(docs)); }catch(e){ alert('Could not save (storage full or blocked).'); return; }
+  currentName=name; refreshList(); flashSaved('Saved "'+name+'"');
+}
+function loadDoc(name){
+  if(!name) return;
+  const docs=allDocs(); if(!docs[name]) return;
+  apply(docs[name]); currentName=name; refreshList(); flashSaved('Opened "'+name+'"');
+}
+function deleteDoc(){
+  if(!currentName){ alert('No saved document is open.'); return; }
+  if(!confirm('Delete saved document "'+currentName+'"? This only removes it from this browser.')) return;
+  const docs=allDocs(); delete docs[currentName];
+  localStorage.setItem(LS_KEY,JSON.stringify(docs));
+  currentName=''; refreshList(); flashSaved('Deleted');
+}
+function newDoc(){
+  if(!confirm('Start a new blank document? Unsaved changes will be lost.')) return;
+  const next = nextNumber();
+  apply({mode:mode,fields:{
+    docNo:next.doc, custId:next.cust, date:today(), page:'1 of 2', refQt:next.doc, term:'50% Advance', termBal:'MYR 0.00',
+    greeting:'Dear ', introBody: mode==='invoice'?INTRO_INV:INTRO_QT,
+    clientCo:'', clientName:'', clientTin:'NRIC/TIN: ', clientPhone:'', clientAddr:'',
+    bankName:'Maybank', bankHolder:'NG WEN KAI', bankAcc:'112884137153',
+    tncTerms:document.querySelector('[data-k="tncTerms"]').value,
+    tncCopyright:document.querySelector('[data-k="tncCopyright"]').value
+  },items:[{desc:"",qty:1,uom:"",price:0,disc:0,foc:false}]});
+  currentName=''; refreshList(); flashSaved('New blank document');
+}
+function nextNumber(){
+  const docs=allDocs(); let max=3;
+  Object.values(docs).forEach(d=>{ const m=(d.fields&&d.fields.docNo||'').match(/(\d+)/); if(m) max=Math.max(max,parseInt(m[1])); });
+  const n=String(max+1).padStart(3,'0');
+  return {doc:(mode==='invoice'?'INV-':'QT-')+n, cust:'CI-'+n};
+}
+function today(){ const d=new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+
+/* ---------- export / import ---------- */
+function exportJSON(){
+  const data=collect();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=(getField('docNo')||'ubold-doc')+'.json'; a.click();
+  flashSaved('Exported JSON');
+}
+function importJSON(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ apply(JSON.parse(r.result)); flashSaved('Imported'); }catch(e){ alert('Invalid file.'); } };
+  r.readAsText(file); ev.target.value='';
+}
+
+/* ---------- save state hint ---------- */
+let dirty=false;
+function autosaveFlag(){ dirty=true; document.getElementById('saveState').textContent='● unsaved changes'; }
+function flashSaved(msg){ dirty=false; const el=document.getElementById('saveState'); el.textContent='✓ '+msg; setTimeout(()=>{ if(!dirty) el.textContent=''; },2500); }
+window.addEventListener('beforeunload',e=>{ if(dirty){ e.preventDefault(); e.returnValue=''; }});
+
+/* ---------- utils ---------- */
+function escapeHtml(s){ return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ---------- init ---------- */
+function init(){
+  // seed two sample rows matching the reference templates
+  const seed=[
+    {desc:"PACKAGE A: LOGO DESIGN\nMain logo + 2 concept options\nDelivery date: Week of 19th October 2026",qty:1,uom:"SET",price:1000,disc:0,foc:false},
+    {desc:"PACKAGING STICKER DESIGN\ni. 110 mm x 130 mm\nii. 130 mm x 170 mm\nDelivery date: Week of 19th October 2026",qty:2,uom:"DESIGN",price:350,disc:0,foc:true}
+  ];
+  seed.forEach(s=>document.getElementById('itemsBody').insertAdjacentHTML('beforeend',rowHTML(s)));
+  bind(); setMode('quotation'); recalc(); refreshList();
+  deferAutosize();
+  document.getElementById('saveState').textContent='';
+}
+init();
+window.addEventListener('load',autosizeAll);
+</script>
+</body>
+</html>

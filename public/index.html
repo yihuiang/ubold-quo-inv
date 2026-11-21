@@ -1,0 +1,2321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UBOLD Design Lab — Quotation & Invoice System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    --ink:#1C2434;--ink-soft:#667085;--ink-faint:#8B94A3;
+    --line:#E7EAF0;--line-soft:#EEF0F5;
+    --accent:#3654B5;--accent-ink:#2B4493;--accent-soft:#EDF1FC;
+    --bg:#F7F8FA;--panel:rgba(255,255,255,.6);--panel-solid:#ffffff;--dark:#1f2533;--dark2:#2a3142;--field:#F7F8FA;
+    --ok:#2E7D57;--ok-soft:#E6F2EC;--warn:#B5792B;--warn-soft:#F7F0E2;
+    --radius:16px;--radius-sm:12px;
+    --glass-border:rgba(255,255,255,.65);
+    --grad-accent:linear-gradient(135deg,#5a6fd6 0%,#3654B5 100%);
+    --app-bg:
+      radial-gradient(1100px 720px at 88% -8%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+      radial-gradient(900px 760px at 4% 112%, rgba(123,108,225,.20), rgba(123,108,225,0) 55%),
+      linear-gradient(142deg,#e9edfb 0%,#d6ddf4 46%,#c4cfee 100%);
+    --shadow:0 1px 2px rgba(28,36,52,.04),0 4px 14px rgba(28,36,52,.05);
+    --shadow-sm:0 1px 2px rgba(28,36,52,.05);
+    --shadow-md:0 2px 4px rgba(28,36,52,.05),0 10px 26px rgba(28,36,52,.08);
+    --shadow-glass:0 10px 34px rgba(46,64,138,.13),0 2px 8px rgba(46,64,138,.06);
+    --lime:#c4df4a;--lime-soft:#eef7cb;--lime-ink:#5f7310;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{font-family:var(--font);color:var(--ink);display:flex;min-height:100vh;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:-.011em;
+    background:var(--app-bg);background-attachment:fixed;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;font-size:13px;}
+
+  /* ---------- Sidebar ---------- */
+  .side{width:244px;background:rgba(255,255,255,.42);-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);border-right:1px solid var(--glass-border);color:var(--ink);display:flex;flex-direction:column;flex-shrink:0;padding:22px 16px 16px;}
+  .side .logo{padding:4px 10px 20px;margin-bottom:6px;border-bottom:1px solid var(--line-soft);}
+  .side .logo .logo-img{width:112px;max-width:100%;height:auto;display:block;}
+  .side .logo .sub{font-size:8.5px;letter-spacing:.34em;color:var(--ink-faint);margin-top:7px;}
+  .nav{padding:14px 0 4px;flex:1;display:flex;flex-direction:column;gap:2px;}
+  .nav a{display:flex;align-items:center;gap:11px;padding:9px 12px;color:#515b6b;text-decoration:none;font-size:13.5px;font-weight:500;border-radius:9px;cursor:pointer;transition:background .16s ease,color .16s ease;}
+  .nav a svg.nico{width:18px;height:18px;flex:0 0 auto;color:var(--ink-faint);transition:color .16s ease;}
+  .nav a:hover{background:rgba(255,255,255,.55);color:var(--ink);}
+  .nav a:hover svg.nico{color:var(--ink-soft);}
+  .nav a.active{background:var(--grad-accent);color:#fff;font-weight:600;box-shadow:0 6px 16px rgba(54,84,181,.30);}
+  .nav a.active svg.nico{color:#fff;}
+  .nav .sechdr{padding:18px 12px 8px;font-size:10px;letter-spacing:.11em;color:var(--ink-faint);font-weight:600;text-transform:uppercase;}
+  .side .foot{padding:14px 12px 2px;font-size:10px;color:var(--ink-faint);line-height:1.6;border-top:1px solid var(--line-soft);margin-top:8px;}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;overflow-y:auto;height:100vh;}
+  .topbar{background:transparent;padding:30px 34px 16px;display:flex;align-items:flex-start;gap:14px;}
+  .topbar .th{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .topbar .eyebrow{font-size:14px;font-weight:500;color:var(--ink-soft);letter-spacing:-.01em;line-height:1.2;}
+  .topbar h1{font-size:clamp(27px,3vw,38px);margin:0;font-weight:700;letter-spacing:-.03em;line-height:1.05;color:var(--ink);}
+  .topbar .sub{font-size:13.5px;color:var(--ink-soft);margin-top:7px;font-weight:400;}
+  #userMenu{margin-top:6px;}
+  .spacer{flex:1;}
+  .content{padding:14px 34px 72px;}
+
+  .btn{background:var(--grad-accent);color:#fff;border:1px solid transparent;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;letter-spacing:-.01em;display:inline-flex;gap:7px;align-items:center;box-shadow:0 4px 14px rgba(54,84,181,.22);transition:box-shadow .16s ease,filter .16s ease,border-color .16s ease,transform .08s ease;}
+  .btn:hover{filter:brightness(1.06);box-shadow:0 6px 18px rgba(54,84,181,.30);}
+  .btn:active{transform:translateY(.5px);}
+  .btn.sec{background:#fff;color:var(--ink);border-color:var(--line);box-shadow:var(--shadow-sm);}
+  .btn.sec:hover{background:#fff;border-color:#d7dce6;box-shadow:var(--shadow);}
+  .btn.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);box-shadow:none;}
+  .btn.ghost:hover{background:var(--line-soft);color:var(--ink);box-shadow:none;}
+  .btn.dark{background:var(--dark);color:#fff;border-color:transparent;}
+  .btn.dark:hover{background:var(--dark2);}
+  .btn.sm{padding:7px 12px;font-size:12px;border-radius:8px;}
+  .btn.danger{background:#fff;color:#C0392B;border-color:#F0D2CF;box-shadow:var(--shadow-sm);}
+  .btn.danger:hover{background:#FDF3F2;border-color:#E6BDB8;}
+
+  .card{background:var(--panel);-webkit-backdrop-filter:blur(20px) saturate(145%);backdrop-filter:blur(20px) saturate(145%);border:1px solid var(--glass-border);border-radius:var(--radius);padding:24px 26px;margin-bottom:20px;box-shadow:var(--shadow-glass);}
+  .card h2{margin:0 0 4px;font-size:15.5px;font-weight:700;letter-spacing:-.01em;}
+  .card .hint{font-size:12.5px;color:var(--ink-soft);margin-bottom:18px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 18px;}
+  .field label{display:block;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ink-soft);margin-bottom:6px;text-transform:uppercase;}
+  .field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px;transition:border-color .16s ease,box-shadow .16s ease;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:#fff;}
+  .field textarea{resize:vertical;min-height:62px;line-height:1.45;}
+  .field.full{grid-column:1/-1;}
+  .req::after{content:" *";color:var(--accent);}
+
+  table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+  table.tbl th{text-align:left;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);}
+  table.tbl td{padding:13px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+  table.tbl tbody tr{transition:background .14s ease;}
+  table.tbl tbody tr:hover{background:#FAFBFC;}
+  table.tbl tbody tr.clickrow{cursor:pointer;}
+  table.tbl tbody tr.clickrow:hover{background:var(--accent-soft);}
+  table.tbl tbody tr:last-child td{border-bottom:0;}
+  .tag{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;text-transform:capitalize;border:1px solid transparent;letter-spacing:.01em;}
+  .tag.draft{background:#F1F3F6;color:#5a5f66;border-color:#E5E8EE;}
+  .tag.pending,.tag.sent,.tag.unpaid{background:var(--warn-soft);color:var(--warn);border-color:#ECDCC2;}
+  .tag.accepted,.tag.paid{background:var(--ok-soft);color:var(--ok);border-color:#CFE6DA;}
+  .tag.partial{background:#EAF0FB;color:#2B6CB0;border-color:#D4E1F4;}
+  .tag.expired{background:#FDECEA;color:#C0392B;border-color:#F3D2CD;}
+  .tag.rejected{background:#F2EFF0;color:#7a6066;border-color:#E4DDDF;}
+  .lockdot{font-size:11px;color:var(--ok);margin-left:4px;}
+  .money{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;font-weight:600;letter-spacing:-.01em;}
+  .muted{color:var(--ink-soft);}
+  .idcell{font-weight:700;letter-spacing:-.01em;color:var(--ink);}
+  .empty{text-align:center;color:var(--ink-soft);padding:40px 10px;font-size:13.5px;}
+
+  /* ---------- dashboard stats + history ---------- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(192px,1fr));gap:16px;margin-bottom:24px;}
+  .stat{background:var(--panel);-webkit-backdrop-filter:blur(20px) saturate(145%);backdrop-filter:blur(20px) saturate(145%);border:1px solid var(--glass-border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-glass);transition:box-shadow .18s ease,border-color .18s ease,transform .18s ease;}
+  .stat:hover{box-shadow:0 14px 40px rgba(46,64,138,.18),0 2px 8px rgba(46,64,138,.08);transform:translateY(-2px);}
+  .stat .lab .sico{background:rgba(54,84,181,.12);}
+  .stat .lab{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;display:flex;align-items:center;gap:10px;}
+  .sico{width:16px;height:16px;flex:0 0 auto;}
+  .stat .lab .sico{width:32px;height:32px;padding:8px;border-radius:9px;background:var(--accent-soft);color:var(--accent);}
+  .stat.good .lab .sico{background:var(--ok-soft);color:var(--ok);}
+  .stat.accent .lab .sico{background:var(--warn-soft);color:var(--warn);}
+  .stat .val{font-size:27px;font-weight:700;margin-top:15px;letter-spacing:-.025em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1;}
+  .stat .sub{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  .stat.accent .val{color:var(--warn);}
+  .stat.good .val{color:var(--ok);}
+  .dochead{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+  .search{padding:9px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:230px;font-size:13px;transition:border-color .16s ease,box-shadow .16s ease;}
+  .search:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:#fff;}
+  .seg2{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;}
+  .seg2 button{background:transparent;border:0;padding:6px 13px;font-size:12.5px;font-weight:600;color:var(--ink-soft);border-radius:7px;transition:background .15s ease,color .15s ease;}
+  .seg2 button:hover{color:var(--ink);}
+  .seg2 button.active{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm);}
+  .typetag{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;letter-spacing:.02em;padding:3px 9px;border-radius:6px;border:1px solid transparent;}
+  .typetag.quotation{background:var(--accent-soft);color:var(--accent);border-color:#DCE4F8;}
+  .typetag.invoice{background:#DEF2EC;color:#0D7A6B;border-color:#C7E8DF;}
+  .created{font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+  .created b{color:var(--ink);font-weight:600;}
+  .filterbar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:16px 0 4px;margin-bottom:8px;border-top:1px solid var(--line-soft);}
+  .fb{display:flex;flex-direction:column;gap:5px;}
+  .fb label{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);}
+  .fb select,.fb input{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12.5px;transition:border-color .16s ease,box-shadow .16s ease;}
+  .fb select:focus,.fb input:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:#fff;}
+  .resultcount{font-size:12px;color:var(--ink-soft);font-weight:500;}
+  /* ---------- finance ---------- */
+  .progress{height:16px;border-radius:10px;background:#edeff2;overflow:hidden;display:flex;margin:4px 0 6px;}
+  .progress .seg-received{background:var(--ok);height:100%;}
+  .progress .seg-outstanding{background:var(--accent);height:100%;}
+  .prolegend{display:flex;gap:18px;font-size:12px;color:var(--ink-soft);flex-wrap:wrap;}
+  .prolegend .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle;}
+  .barcell{min-width:120px;}
+  .minibar{height:7px;border-radius:5px;background:#edeff2;overflow:hidden;margin-top:4px;}
+  .minibar>span{display:block;height:100%;background:var(--ok);}
+  .fin-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:900px){.fin-split{grid-template-columns:1fr;}}
+
+  /* ---------- line items editor ---------- */
+  table.items{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+  table.items th{background:var(--dark);color:#fff;font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:8px 9px;text-align:left;font-weight:700;}
+  table.items th.r{text-align:right;}table.items th.c{text-align:center;}
+  table.items td{border-bottom:1px solid var(--line);padding:6px 8px;vertical-align:top;}
+  table.items td textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px 8px;resize:vertical;min-height:52px;font-size:12.5px;line-height:1.35;background:var(--field);}
+  table.items td input{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 7px;background:var(--field);}
+  table.items td input.c{text-align:center;}table.items td input.r{text-align:right;}
+  table.items td select{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 6px;background:var(--field);font-size:12.5px;text-align:center;cursor:pointer;}
+  .iw-no{width:34px;text-align:center;color:var(--ink-soft);padding-top:14px;}
+  .iw-qty{width:62px;}.iw-uom{width:92px;}.iw-price{width:96px;}.iw-disc{width:118px;}
+  .disc-wrap{display:flex;gap:4px;align-items:center;}
+  .disc-wrap input{flex:1;min-width:0;}
+  .disc-wrap select{flex:0 0 46px;padding:7px 2px;}
+  .iw-total{width:92px;text-align:right;font-weight:700;padding-top:14px;white-space:nowrap;}
+  .iw-act{width:34px;}
+  .foc{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--accent);cursor:pointer;margin-top:4px;user-select:none;}
+  .rowx{border:0;background:transparent;color:#c0392b;font-size:15px;line-height:1;padding:8px 4px;}
+
+  .totbar{display:flex;justify-content:flex-end;gap:30px;margin-top:14px;align-items:flex-end;flex-wrap:wrap;}
+  .totbox{min-width:260px;font-size:13px;}
+  .totbox .tr{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);}
+  .totbox .tr.grand{border-bottom:0;background:var(--dark);color:#fff;border-radius:8px;padding:11px 14px;margin-top:8px;font-weight:800;}
+  .totbox .tr.grand .v{font-size:15px;}
+  .words{flex:1;min-width:260px;font-size:12px;align-self:flex-end;}
+  .words .wl{font-size:10px;letter-spacing:.1em;color:var(--ink-soft);font-weight:700;margin-bottom:3px;}
+  .words .wv{font-weight:700;text-transform:uppercase;line-height:1.4;}
+
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.danger-solid{background:#c0392b;color:#fff;}
+  .btn.danger-solid:hover{background:#a93226;}
+  /* ---------- modal ---------- */
+  .modal{position:fixed;inset:0;background:rgba(20,22,26,.55);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
+  .modalbox{background:#fff;border-radius:14px;padding:24px 26px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:slidein .15s;}
+  .modalbox .mh{font-size:17px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .modalbox .mp{font-size:13px;color:var(--ink-soft);line-height:1.55;margin:0 0 14px;}
+  .modalbox .mp b{color:var(--ink);}
+  .mchk{display:flex;gap:9px;align-items:flex-start;font-size:13px;font-weight:600;background:#fdecec;border:1px solid #f3c6c6;border-radius:9px;padding:11px 13px;margin-bottom:18px;cursor:pointer;}
+  .mchk input{margin-top:1px;width:16px;height:16px;accent-color:#c0392b;}
+  .mactions{display:flex;justify-content:flex-end;gap:10px;}
+
+  .flashwrap{position:fixed;top:16px;right:16px;z-index:100;display:flex;flex-direction:column;gap:8px;}
+  .flash{background:var(--dark);color:#fff;padding:11px 16px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.25);border-left:4px solid var(--ok);animation:slidein .2s;}
+  .flash.err{border-left-color:#e74c3c;}
+  @keyframes slidein{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+
+  .inlineform{background:#FBFCFE;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:10px;}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{font-size:11px;color:var(--ink-soft);background:#eef0f2;border-radius:20px;padding:3px 10px;font-weight:600;}
+  .idpreview{font-size:12px;color:var(--ink-soft);}
+  .idpreview b{color:var(--accent);font-size:14px;}
+
+  /* ---------- print view ---------- */
+  #view-print{display:none;}
+  .printbar{position:sticky;top:0;z-index:30;background:var(--dark);color:#fff;padding:12px 20px;display:flex;gap:12px;align-items:center;}
+  .paperwrap{padding:24px;display:flex;flex-direction:column;align-items:center;gap:20px;background:#52555c;}
+  /* ===== UBOLD document — matches the reference PDFs (blue, serif/sans) ===== */
+  .page{
+    --db:#26418f; --dm:#3f59a8; --dt:#3c4a78; --dsoft:#8c99c0; --dbar:#2e3f87; --dhair:#d2d8ea;
+    background:#fff;width:210mm;min-height:297mm;padding:15mm 15mm 12mm;position:relative;display:flex;flex-direction:column;
+    box-shadow:0 6px 30px rgba(0,0,0,.35);font-family:Georgia,"Times New Roman",serif;color:var(--dt);
+  }
+  .page .sans{font-family:"Segoe UI",Arial,sans-serif;}
+  .d-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;}
+  .d-logo svg{width:86px;height:auto;display:block;}
+  .d-logo img{width:72px;height:auto;display:block;}
+  .meta{font-family:"Segoe UI",Arial,sans-serif;font-size:11px;border-collapse:collapse;margin-left:auto;color:var(--dm);}
+  .meta td{padding:2px 0;vertical-align:top;}
+  .meta .k{text-align:right;padding-right:8px;white-space:nowrap;}
+  .meta .v{min-width:92px;font-weight:600;color:var(--db);}
+  .d-band{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-top:10px;}
+  .d-title{font-family:"Segoe UI",Arial,sans-serif;font-size:40px;font-weight:400;letter-spacing:.16em;color:var(--db);text-align:right;line-height:1;white-space:nowrap;align-self:center;}
+  .d-client .co{font-weight:700;font-size:15px;color:var(--db);white-space:nowrap;}
+  .d-client .co .cn{font-weight:400;}
+  .d-client .nm{font-weight:700;font-size:14px;color:var(--db);margin-top:3px;}
+  .d-client .ln{font-size:12px;margin-top:11px;line-height:1.45;max-width:260px;}
+  .d-hr{border:0;border-top:1px solid var(--dhair);margin:18px 0 14px;}
+  .d-intro{font-size:12px;line-height:1.5;color:var(--dt);}
+  .d-intro p{margin:0 0 12px;}
+  .d-intro .greet{margin-bottom:14px;}
+  table.ditems{width:100%;border-collapse:collapse;margin-top:12px;}
+  table.ditems thead th{font-family:"Segoe UI",Arial,sans-serif;color:var(--dm);font-weight:400;font-size:11px;padding:4px 8px 9px;text-align:left;border-bottom:1px solid var(--dhair);}
+  table.ditems thead th small{display:block;font-size:9px;}
+  table.ditems thead th.c{text-align:center;}table.ditems thead th.r{text-align:right;}
+  table.ditems tbody td{padding:11px 8px;vertical-align:top;font-size:12px;color:var(--dt);}
+  table.ditems td.dc-c,table.ditems td.dc-r{font-family:"Segoe UI",Arial,sans-serif;font-size:11px;}
+  .dc-no{color:var(--dt);}
+  .dc-desc .t{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;color:var(--db);font-size:12px;}
+  .dc-desc .s{font-family:"Segoe UI",Arial,sans-serif;color:var(--dsoft);font-size:10px;text-transform:uppercase;line-height:1.55;white-space:pre-line;margin-top:3px;}
+  .dc-c{text-align:center;}.dc-r{text-align:right;white-space:nowrap;}
+  .dc-foc{color:var(--dm);}
+  .d-totwrap{display:flex;justify-content:space-between;gap:24px;margin-top:14px;align-items:center;}
+  .d-words{font-size:11px;color:var(--dsoft);}
+  .d-tot{width:320px;font-family:"Segoe UI",Arial,sans-serif;}
+  .d-tot .tr{display:flex;justify-content:space-between;font-size:11.5px;padding:8px 2px;color:var(--dt);border-bottom:1px solid var(--dhair);}
+  .d-tot .tr.bold{font-weight:700;color:var(--db);border-bottom:0;}
+  .d-totline{display:flex;justify-content:flex-end;align-items:center;gap:18px;}
+  .d-totline .lbl{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;color:var(--db);font-size:12px;}
+  .d-totbox{border:1.4px solid var(--dm);border-radius:3px;padding:7px 18px;font-family:"Segoe UI",Arial,sans-serif;font-weight:700;color:var(--db);font-size:13px;min-width:120px;text-align:right;white-space:nowrap;}
+  .d-advline{font-family:"Segoe UI",Arial,sans-serif;font-size:11.5px;color:var(--db);background:#eef2fb;border:1px solid #cfd9ef;border-radius:4px;padding:7px 16px;white-space:nowrap;}
+  .d-two{display:flex;gap:26px;margin-top:22px;}
+  .d-two .lab{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;color:var(--db);font-size:13px;width:150px;flex-shrink:0;}
+  .d-two .body{font-size:11px;line-height:1.55;color:var(--dt);flex:1;}
+  .d-two .body a{color:var(--dm);}
+  .note-wrap{margin-top:34px;}
+  .note-wrap .nh{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;color:var(--db);font-size:15px;margin-bottom:12px;}
+  .note-list{display:flex;gap:10px;font-size:11.5px;color:var(--dt);line-height:1.55;margin-bottom:10px;}
+  .note-list .rn{width:16px;flex-shrink:0;}
+  .note-list b{color:var(--db);}
+  .d-sign{display:flex;gap:40px;margin-top:40px;}
+  .sig-col{flex:1;}
+  .sig-cap{font-family:"Segoe UI",Arial,sans-serif;font-size:11px;color:var(--dm);line-height:1.4;}
+  .sig-area{position:relative;min-height:70px;}
+  .sig-area img.sig{max-height:64px;max-width:200px;}
+  .sig-area img.stamp{position:absolute;left:150px;top:-14px;max-height:96px;}
+  .sig-line{border-top:1px solid var(--dt);width:100%;max-width:300px;margin-top:6px;}
+  .sig-italic{font-style:italic;color:var(--dt);font-size:12px;}
+  .confirm-r{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;color:var(--db);text-align:center;font-size:12px;line-height:1.5;}
+  .ack{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;color:var(--db);text-align:center;font-size:12.5px;margin-top:44px;}
+  .d-bar{color:#fff;text-align:center;padding:15px;margin-top:28px;background:var(--dbar);}
+  .d-bar.barsans{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;font-size:12.5px;}
+  .d-bar.barserif{font-style:italic;font-size:13px;line-height:1.7;}
+  .d-pg2line{font-family:"Segoe UI",Arial,sans-serif;text-align:right;font-size:10px;color:var(--dsoft);margin-bottom:14px;}
+  .d-foot{margin-top:auto;padding-top:16px;}
+  .d-cbar{display:flex;justify-content:space-between;font-family:"Segoe UI",Arial,sans-serif;font-size:10px;color:var(--dsoft);padding-top:10px;border-top:1px solid var(--dhair);gap:12px;}
+  .d-cbar>div{line-height:1.6;}
+  .d-cbar .cmid{text-align:center;}
+
+  @page{size:A4;margin:0;}
+  @media print{
+    body{display:block;background:#fff;}
+    .side,.topbar,.printbar,.no-print{display:none !important;}
+    .main{overflow:visible;height:auto;}
+    .paperwrap{padding:0;gap:0;background:#fff;}
+    .page{box-shadow:none;page-break-after:always;}
+    .page:last-child{page-break-after:auto;}
+  }
+  @media(max-width:1000px){.grid2,.grid3{grid-template-columns:1fr;}.page{width:100%;min-height:auto;padding:16px;}}
+
+  /* ---------- auth screen ---------- */
+  #authScreen{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:20px;
+    background:var(--app-bg);background-attachment:fixed;}
+  #authScreen.show{display:flex;}
+  .authcard{width:100%;max-width:410px;background:rgba(255,255,255,.66);-webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%);border:1px solid var(--glass-border);border-radius:18px;box-shadow:var(--shadow-glass);padding:32px 30px;}
+  .authlogo{display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin-bottom:4px;}
+  .authlogo img{height:32px;}
+  .authcard h2{margin:16px 0 2px;font-size:20px;}
+  .authcard .hint{font-size:13px;color:var(--ink-soft);margin-bottom:18px;}
+  .authtabs{display:flex;gap:6px;background:var(--bg);border-radius:999px;padding:4px;margin-bottom:20px;}
+  .authtabs button{flex:1;border:0;background:transparent;padding:9px;border-radius:999px;font-weight:700;font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .authtabs button.active{background:var(--grad-accent);color:#fff;box-shadow:0 4px 12px rgba(54,84,181,.28);}
+  .auth-form{display:none;}
+  .auth-form.active{display:block;}
+  .auth-form .field{margin-bottom:13px;}
+  .auth-form .btn{width:100%;justify-content:center;margin-top:4px;}
+  .auth-err{display:none;background:#fde8e8;color:#c0392b;font-size:12.5px;padding:9px 12px;border-radius:12px;margin-bottom:14px;}
+  .auth-ok{display:none;background:#e4f6ec;color:var(--ok);font-size:12.5px;padding:9px 12px;border-radius:12px;margin-bottom:14px;}
+  .auth-link{background:none;border:0;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer;padding:0;}
+  .auth-foot{margin-top:14px;text-align:center;font-size:12.5px;color:var(--ink-soft);}
+  .remember{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);margin:2px 0 16px;cursor:pointer;user-select:none;}
+  .remember input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+  .pwfield{position:relative;}
+  .pwfield input{padding-right:44px;}
+  .pweye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+    border:0;background:transparent;color:var(--ink-soft);cursor:pointer;border-radius:8px;padding:0;}
+  .pweye:hover{color:var(--accent);background:var(--bg);}
+
+  /* ---------- avatar + user menu ---------- */
+  .avatarbtn{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 4px 14px rgba(54,84,181,.28);cursor:pointer;
+    background:var(--grad-accent);color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0;}
+  .avatarbtn img{width:100%;height:100%;object-fit:cover;}
+  .usermenu{position:relative;}
+  .usermenu .menu{position:absolute;right:0;top:48px;background:#fff;border-radius:16px;box-shadow:var(--shadow);min-width:210px;padding:8px;display:none;z-index:50;}
+  .usermenu.open .menu{display:block;}
+  .usermenu .uhead{padding:10px 12px 12px;border-bottom:1px solid var(--line);margin-bottom:6px;}
+  .usermenu .uhead .un{font-weight:800;font-size:14px;}
+  .usermenu .uhead .ue{font-size:12px;color:var(--ink-soft);word-break:break-all;}
+  .usermenu .mi{display:flex;align-items:center;gap:9px;width:100%;border:0;background:transparent;padding:10px 12px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;}
+  .usermenu .mi:hover{background:var(--bg);}
+  .rolechip{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);margin-top:6px;}
+
+  /* ---------- profile + signature pad ---------- */
+  .avatar-lg{width:92px;height:92px;border-radius:50%;background:var(--grad-accent);color:#fff;font-weight:700;font-size:34px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 22px rgba(54,84,181,.28);}
+  .avatar-lg img{width:100%;height:100%;object-fit:cover;}
+  .sigpad-wrap{border:1.5px dashed var(--line);border-radius:14px;background:#fff;position:relative;overflow:hidden;}
+  .sigpad-wrap canvas{display:block;width:100%;height:180px;touch-action:none;cursor:crosshair;}
+  .sig-preview{max-height:120px;max-width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:6px;}
+  .seg2.sigmode button{min-width:92px;}
+</style>
+</head>
+<body>
+
+<!-- ========== AUTH SCREEN ========== -->
+<div id="authScreen">
+  <div class="authcard">
+    <div class="authlogo"><img src="ubold-logo.png" alt="UBOLD"><div class="sub" style="font-size:11px;letter-spacing:.14em;color:var(--ink-soft);font-weight:700">DESIGN&nbsp;LAB</div></div>
+    <div class="authtabs">
+      <button id="tab-login" class="active" onclick="authTab('login')">Sign in</button>
+      <button id="tab-register" onclick="authTab('register')">Create account</button>
+    </div>
+    <div class="auth-err" id="authErr"></div>
+    <div class="auth-ok" id="authOk"></div>
+
+    <!-- login -->
+    <form class="auth-form active" id="form-login" onsubmit="doLogin(event)">
+      <h2 style="margin-top:0">Welcome back</h2>
+      <div class="hint">Sign in to your UBOLD workspace.</div>
+      <div class="field"><label class="req">Email</label><input type="email" id="li-email" autocomplete="email" required></div>
+      <div class="field"><label class="req">Password</label><div class="pwfield"><input type="password" id="li-pw" autocomplete="current-password" required><button type="button" class="pweye" onclick="togglePw(this,'li-pw')" aria-label="Show password"></button></div></div>
+      <label class="remember"><input type="checkbox" id="li-remember" checked> Remember me on this device</label>
+      <button class="btn" type="submit">Sign in</button>
+      <div class="auth-foot"><button type="button" class="auth-link" onclick="authTab('forgot')">Forgot password?</button></div>
+    </form>
+
+    <!-- register -->
+    <form class="auth-form" id="form-register" onsubmit="doRegister(event)">
+      <h2 style="margin-top:0">Create your account</h2>
+      <div class="hint">The first account becomes the workspace owner.</div>
+      <div class="field"><label class="req">Full name</label><input id="re-name" autocomplete="name" required></div>
+      <div class="field"><label class="req">Email</label><input type="email" id="re-email" autocomplete="email" required></div>
+      <div class="field"><label class="req">Password</label><div class="pwfield"><input type="password" id="re-pw" autocomplete="new-password" minlength="6" required><button type="button" class="pweye" onclick="togglePw(this,'re-pw')" aria-label="Show password"></button></div><div class="hint" style="margin:5px 0 0">At least 6 characters.</div></div>
+      <div class="field"><label class="req">Repeat password</label><div class="pwfield"><input type="password" id="re-pw2" autocomplete="new-password" required><button type="button" class="pweye" onclick="togglePw(this,'re-pw2')" aria-label="Show password"></button></div></div>
+      <button class="btn" type="submit">Create account</button>
+    </form>
+
+    <!-- forgot -->
+    <form class="auth-form" id="form-forgot" onsubmit="doReset(event)">
+      <h2 style="margin-top:0">Reset password</h2>
+      <div class="hint">Enter your email and choose a new password.</div>
+      <div class="field"><label class="req">Email</label><input type="email" id="fg-email" autocomplete="email" required></div>
+      <div class="field"><label class="req">New password</label><div class="pwfield"><input type="password" id="fg-pw" autocomplete="new-password" minlength="6" required><button type="button" class="pweye" onclick="togglePw(this,'fg-pw')" aria-label="Show password"></button></div></div>
+      <button class="btn" type="submit">Set new password</button>
+      <div class="auth-foot"><button type="button" class="auth-link" onclick="authTab('login')">← Back to sign in</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="side no-print">
+  <div class="logo"><img src="ubold-logo.png" alt="UBOLD" class="logo-img"><div class="sub">DESIGN&nbsp;LAB</div></div>
+  <div class="nav">
+    <a id="nav-docs" onclick="showDocs()"><svg class="nico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Documents</span></a>
+    <a id="nav-finance" onclick="showFinance()"><svg class="nico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span>Finance</span></a>
+    <a id="nav-customers" onclick="showCustomers()"><svg class="nico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Customers</span></a>
+    <div class="sechdr">Create new</div>
+    <a id="nav-newq" onclick="newDoc('quotation')"><svg class="nico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span>New Quotation</span></a>
+    <a id="nav-newi" onclick="newDoc('invoice')"><svg class="nico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span>New Invoice</span></a>
+  </div>
+  <div class="foot">UBOLD DESIGN LAB<br>202603238260 (003886944-A)<br>Data: ubold.db</div>
+</div>
+
+<div class="main">
+  <div class="topbar no-print">
+    <div class="th">
+      <div class="eyebrow" id="pageEyebrow"></div>
+      <h1 id="pageTitle">Documents</h1>
+      <span class="sub" id="pageSub"></span>
+    </div>
+    <div class="spacer"></div>
+    <div id="topActions"></div>
+    <div class="usermenu" id="userMenu">
+      <button class="avatarbtn" id="avatarBtn" onclick="toggleUserMenu(event)" title="Account"></button>
+      <div class="menu" id="userMenuPanel">
+        <div class="uhead">
+          <div class="un" id="um-name"></div>
+          <div class="ue" id="um-email"></div>
+          <span class="rolechip" id="um-role"></span>
+        </div>
+        <button class="mi" onclick="showProfile()">👤 My profile</button>
+        <button class="mi" id="um-team" onclick="showTeam()" style="display:none">👥 Team</button>
+        <button class="mi" onclick="doLogout()">⎋ Sign out</button>
+      </div>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- ========== DOCUMENTS / HISTORY ========== -->
+    <div id="view-docs">
+      <div class="stats" id="statCards"></div>
+      <div class="card">
+        <div class="dochead">
+          <div><h2>Document history</h2><div class="hint">Everything you've created, newest first.</div></div>
+          <div class="spacer" style="flex:1"></div>
+          <input id="docSearch" name="doc-search" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other" class="search" placeholder="Search ID or customer…" oninput="renderHistory()">
+          <div class="seg2" id="docFilter">
+            <button data-f="all" class="active" onclick="setFilter('all')">All</button>
+            <button data-f="quotation" onclick="setFilter('quotation')">Quotations</button>
+            <button data-f="invoice" onclick="setFilter('invoice')">Invoices</button>
+          </div>
+        </div>
+        <div class="filterbar">
+          <div class="fb"><label>Status</label>
+            <select id="fStatus" onchange="renderHistory()">
+              <option value="">All statuses</option>
+              <optgroup label="Quotation">
+                <option value="pending">Pending</option><option value="accepted">Accepted (signed)</option>
+                <option value="expired">Expired</option><option value="rejected">Rejected</option>
+              </optgroup>
+              <optgroup label="Invoice">
+                <option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="fb"><label>Customer</label><select id="fCust" onchange="renderHistory()"><option value="">All customers</option></select></div>
+          <div class="fb"><label>Doc date from</label><input type="date" id="fFrom" onchange="renderHistory()"></div>
+          <div class="fb"><label>Doc date to</label><input type="date" id="fTo" onchange="renderHistory()"></div>
+          <button class="btn ghost sm" onclick="clearFilters()">Clear filters</button>
+          <div class="spacer" style="flex:1"></div>
+          <span class="resultcount" id="resultCount"></span>
+        </div>
+        <table class="tbl"><thead><tr>
+          <th>Created</th><th>Type</th><th>Document</th><th>Customer</th><th>Doc date</th><th>Status</th><th style="text-align:right">Amount</th><th></th>
+        </tr></thead><tbody id="histRows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ========== FINANCE ========== -->
+    <div id="view-finance" style="display:none">
+      <div class="stats" id="finStats"></div>
+      <div class="card">
+        <h2>Cash collection</h2>
+        <div class="hint">How much of everything you've invoiced has actually been received.</div>
+        <div class="progress" id="finProgress"></div>
+        <div class="prolegend" id="finLegend"></div>
+      </div>
+      <div class="fin-split">
+        <div class="card">
+          <h2>Receivables by invoice</h2>
+          <div class="hint">What each invoice has brought in and what's still owed.</div>
+          <table class="tbl"><thead><tr>
+            <th>Invoice</th><th>Customer</th><th style="text-align:right">Invoiced</th>
+            <th style="text-align:right">Received</th><th style="text-align:right">Outstanding</th><th>Status</th>
+          </tr></thead><tbody id="finInvRows"></tbody>
+          <tfoot id="finInvFoot"></tfoot></table>
+        </div>
+        <div class="card">
+          <h2>By customer</h2>
+          <div class="hint">Total received and outstanding per client.</div>
+          <table class="tbl"><thead><tr>
+            <th>Customer</th><th style="text-align:right">Invoiced</th>
+            <th class="barcell">Received</th><th style="text-align:right">Outstanding</th>
+          </tr></thead><tbody id="finCustRows"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Monthly income</h2>
+        <div class="hint">Invoiced vs received, grouped by the invoice's month.</div>
+        <table class="tbl"><thead><tr>
+          <th>Month</th><th style="text-align:right">Invoices</th><th style="text-align:right">Invoiced</th>
+          <th class="barcell">Received</th><th style="text-align:right">Outstanding</th>
+        </tr></thead><tbody id="finMonthRows"></tbody><tfoot id="finMonthFoot"></tfoot></table>
+      </div>
+      <div class="card">
+        <h2>Quotation pipeline</h2>
+        <div class="hint">Value of quotations by stage — your potential upcoming work.</div>
+        <div class="stats" id="finPipeline" style="margin-bottom:0"></div>
+      </div>
+    </div>
+
+    <!-- ========== CUSTOMERS ========== -->
+    <div id="view-customers" style="display:none">
+      <div class="card">
+        <div style="display:flex;align-items:center">
+          <div><h2>Customers</h2><div class="hint">People & companies you issue documents to.</div></div>
+          <div class="spacer" style="flex:1"></div>
+          <button class="btn" onclick="toggleCustForm()">＋ Add customer</button>
+        </div>
+        <div id="custFormWrap" style="display:none">
+          <div class="inlineform">
+            <div id="cf-heading" style="font-weight:800;font-size:13px;margin-bottom:10px">New customer</div>
+            <div class="grid2">
+              <div class="field"><label class="req">Contact name</label>
+                <div style="display:flex;gap:8px">
+                  <select id="cf-title" style="flex:0 0 112px"><option value="">Title</option><option>Mr</option><option>Mrs</option><option>Ms</option><option>Miss</option><option>Mdm</option><option>Dr</option></select>
+                  <input id="cf-name" style="flex:1" placeholder="Full name">
+                </div>
+              </div>
+              <div class="field"><label>Company</label><input id="cf-company" placeholder="Company name (optional)"></div>
+              <div class="field"><label>NRIC / TIN</label><input id="cf-tin" placeholder="ID or tax number"></div>
+              <div class="field"><label>Phone</label><input id="cf-phone" placeholder="Contact number"></div>
+              <div class="field full"><label>Address</label><textarea id="cf-address" placeholder="Street, city, postcode, state"></textarea></div>
+            </div>
+            <div class="row-actions" style="margin-top:12px">
+              <button class="btn" onclick="saveCustomer()" id="cf-save">Save customer</button>
+              <button class="btn ghost" onclick="closeCustForm()">Cancel</button>
+              <button class="btn danger" id="cf-delete" style="display:none;margin-left:auto" onclick="deleteCustomer()">Delete customer</button>
+              <span class="idpreview" id="cf-idprev"></span>
+            </div>
+          </div>
+        </div>
+        <table class="tbl" style="margin-top:14px"><thead><tr>
+          <th>ID</th><th>Name</th><th>Company</th><th>Phone</th><th>NRIC/TIN</th><th></th>
+        </tr></thead><tbody id="custRows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ========== BUILDER ========== -->
+    <div id="view-builder" style="display:none">
+      <div class="card">
+        <div style="display:flex;align-items:center;margin-bottom:6px">
+          <h2 id="builderTitle">New Quotation</h2>
+          <div class="spacer" style="flex:1"></div>
+          <span class="idpreview" id="builderId"></span>
+        </div>
+        <div class="grid3">
+          <div class="field full" style="grid-column:1/-1">
+            <label class="req">Customer</label>
+            <div style="display:flex;gap:8px">
+              <select id="b-customer" style="flex:1" onchange="onCustomerChange()"></select>
+              <button class="btn sec sm" onclick="toggleCustForm(true)">＋ New</button>
+            </div>
+          </div>
+          <div class="field"><label>Date</label><input type="date" id="b-date"></div>
+          <div class="field"><label>Term</label><select id="b-term"></select></div>
+          <div class="field"><label>Status</label><select id="b-status"></select></div>
+          <div class="field inv-only"><label>Ref. Quotation</label><select id="b-refqt" onchange="onRefQtChange()"></select></div>
+          <div class="field inv-only"><label>Advance paid (MYR)</label><input type="number" step="0.01" id="b-advance" oninput="recalc()"></div>
+          <div class="field full" style="grid-column:1/-1"><label>Notes (optional)</label><textarea id="b-notes" placeholder="Any note for this document…"></textarea></div>
+        </div>
+
+        <div id="builderCustForm"></div>
+
+        <h2 style="margin-top:20px;font-size:14px">Line items</h2>
+        <table class="items">
+          <thead><tr>
+            <th class="iw-no c">No</th><th>Item description</th>
+            <th class="iw-qty c">Qty</th><th class="iw-uom c">UOM</th>
+            <th class="iw-price r">Unit price</th><th class="iw-disc r">Disc</th>
+            <th class="iw-total">Total</th><th class="iw-act"></th>
+          </tr></thead>
+          <tbody id="itemRows"></tbody>
+        </table>
+        <button class="btn sec sm" style="margin-top:10px" onclick="addItem()">＋ Add item</button>
+
+        <div class="totbar">
+          <div class="words"><div class="wl">AMOUNT IN WORDS</div><div class="wv" id="b-words"></div></div>
+          <div class="totbox">
+            <div class="tr"><span>Subtotal</span><span class="v money" id="b-subtotal">MYR 0.00</span></div>
+            <div class="tr inv-only adv"><span>Less: Advance Paid</span><span class="v money" id="b-adv2">(MYR 0.00)</span></div>
+            <div class="tr grand"><span id="b-grandlbl">TOTAL</span><span class="v money" id="b-grand">MYR 0.00</span></div>
+          </div>
+        </div>
+
+        <div class="row-actions" style="margin-top:20px">
+          <button class="btn" id="b-save" onclick="saveDoc()">Save</button>
+          <button class="btn sec" onclick="previewDoc()">👁 Preview</button>
+          <button class="btn ghost" onclick="showDocs()">Cancel</button>
+          <span class="idpreview" id="b-saved"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PROFILE ========== -->
+    <div id="view-profile" style="display:none">
+      <div class="card" style="max-width:720px">
+        <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px">
+          <div class="avatar-lg" id="pf-avatar"></div>
+          <div>
+            <h2 style="margin:0" id="pf-heading">My profile</h2>
+            <div class="hint" style="margin:2px 0 0" id="pf-sub"></div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field"><label class="req">Full name</label><input id="pf-name"></div>
+          <div class="field"><label class="req">Email (sign-in)</label><input type="email" id="pf-email"></div>
+        </div>
+
+        <h2 style="margin-top:24px;font-size:14px">My signature</h2>
+        <div class="hint" style="margin-bottom:10px">This signature is printed in the “Authorised Signature” area of the quotations &amp; invoices you create.</div>
+        <div id="sig-tools">
+        <div class="seg2 sigmode" id="sigMode" style="margin-bottom:12px">
+          <button data-m="draw" class="active" onclick="sigMode('draw')">Draw</button>
+          <button data-m="upload" onclick="sigMode('upload')">Upload</button>
+        </div>
+
+        <div id="sig-draw">
+          <div class="sigpad-wrap"><canvas id="sigPad"></canvas></div>
+          <div class="row-actions" style="margin-top:10px">
+            <button class="btn sec sm" onclick="clearSigPad()">Clear</button>
+            <span class="hint">Draw with your mouse or finger.</span>
+          </div>
+        </div>
+        <div id="sig-upload" style="display:none">
+          <button class="btn sec sm" onclick="pickSigFile()">Choose image…</button>
+          <input type="file" id="sigFileInput" accept="image/*" style="display:none" onchange="onSigFile(this)">
+          <span class="hint" id="sigFileName" style="margin-left:8px"></span>
+          <div id="sig-upload-preview" style="margin-top:12px;display:none">
+            <label class="field" style="display:block;font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px">Preview</label>
+            <img class="sig-preview" id="sig-upload-img" alt="signature preview">
+          </div>
+        </div>
+        </div><!-- /sig-tools -->
+
+        <div id="sig-current" style="margin-top:4px;display:none">
+          <label class="field" style="display:block;font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px">Current saved signature</label>
+          <img class="sig-preview" id="sig-current-img" alt="signature">
+          <div class="hint" style="margin-top:8px">You can save one signature. Delete it to draw or upload a new one.</div>
+          <div class="row-actions" style="margin-top:10px">
+            <button class="btn danger sm" onclick="deleteSignature()">Delete signature</button>
+          </div>
+        </div>
+
+        <div class="row-actions" style="margin-top:22px">
+          <button class="btn" id="pf-save" onclick="saveProfile()">Save profile</button>
+          <button class="btn ghost" onclick="showDocs()">Cancel</button>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:720px;margin-top:22px">
+        <h2 style="margin:0 0 2px">Change password</h2>
+        <div class="hint">Enter your current password, then choose a new one.</div>
+        <div class="grid2" style="margin-top:14px">
+          <div class="field full" style="grid-column:1/-1"><label class="req">Current password</label><div class="pwfield"><input type="password" id="cp-current" autocomplete="current-password"><button type="button" class="pweye" onclick="togglePw(this,'cp-current')" aria-label="Show password"></button></div></div>
+          <div class="field"><label class="req">New password</label><div class="pwfield"><input type="password" id="cp-new" autocomplete="new-password" minlength="6"><button type="button" class="pweye" onclick="togglePw(this,'cp-new')" aria-label="Show password"></button></div><div class="hint" style="margin:5px 0 0">At least 6 characters.</div></div>
+          <div class="field"><label class="req">Repeat new password</label><div class="pwfield"><input type="password" id="cp-new2" autocomplete="new-password"><button type="button" class="pweye" onclick="togglePw(this,'cp-new2')" aria-label="Show password"></button></div></div>
+        </div>
+        <div class="row-actions" style="margin-top:18px">
+          <button class="btn" id="cp-save" onclick="changePassword()">Update password</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== TEAM (owner) ========== -->
+    <div id="view-team" style="display:none">
+      <div class="card">
+        <div style="display:flex;align-items:center">
+          <div><h2>Team</h2><div class="hint">Approve new sign-ups and manage who can access this workspace.</div></div>
+          <div class="spacer" style="flex:1"></div>
+          <button class="btn" onclick="toggleAddMember()">＋ Add member</button>
+        </div>
+        <div id="addMemberWrap" style="display:none">
+          <div class="inlineform">
+            <div class="grid2">
+              <div class="field"><label class="req">Name</label><input id="am-name"></div>
+              <div class="field"><label class="req">Email</label><input type="email" id="am-email"></div>
+              <div class="field"><label class="req">Temp password</label><input id="am-pw" placeholder="min 6 characters"></div>
+            </div>
+            <div class="row-actions" style="margin-top:12px">
+              <button class="btn sm" onclick="addMember()">Create active member</button>
+              <button class="btn ghost sm" onclick="toggleAddMember()">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <table class="tbl" style="margin-top:14px"><thead><tr>
+          <th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th>
+        </tr></thead><tbody id="teamRows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ========== PRINT VIEW ========== -->
+    <div id="view-print">
+      <div class="printbar no-print">
+        <button class="btn" onclick="window.print()">⎙ Print / Save PDF</button>
+        <button class="btn" id="pv-save" style="display:none" onclick="saveDoc()">Save</button>
+        <button class="btn sec" id="pv-backedit" style="display:none" onclick="backToBuilder()">← Back to edit</button>
+        <button class="btn sec" id="pv-edit" onclick="editCurrent()">✎ Edit</button>
+        <button class="btn" id="pv-upload" style="display:none;background:#0d7a6b" onclick="pickSigned()">⬆ Upload signed copy</button>
+        <button class="btn sec" id="pv-viewsigned" style="display:none" onclick="viewSigned()">📎 View signed copy</button>
+        <button class="btn ghost" id="pv-unsign" style="display:none;color:#fff;border-color:#4d525b" onclick="removeSigned()">↩ Remove signed / reopen</button>
+        <button class="btn" id="pv-payments" style="display:none;background:#0d7a6b" onclick="openPayments()">Payments</button>
+        <button class="btn ghost" id="pv-back" style="color:#fff;border-color:#4d525b" onclick="showDocs()">← Back to documents</button>
+        <div class="spacer"></div>
+        <span style="color:#9aa0a8;font-size:12px" id="printMeta"></span>
+      </div>
+      <input type="file" id="signedInput" accept="image/*,application/pdf" style="display:none" onchange="doSignUpload(this)">
+      <div class="paperwrap" id="paperwrap"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="flashwrap no-print" id="flashwrap"></div>
+
+<!-- delete confirmation modal (two-step) -->
+<div class="modal no-print" id="delModal" onclick="if(event.target===this)closeDel()">
+  <div class="modalbox">
+    <div class="mh">🗑 Delete document?</div>
+    <p class="mp">You are about to permanently delete <span id="delInfo"></span> and all of its line items from the database. <b>This cannot be undone.</b></p>
+    <label class="mchk"><input type="checkbox" id="delConfirmChk" onchange="document.getElementById('delConfirmBtn').disabled=!this.checked"> Yes, I understand this permanently deletes the document.</label>
+    <div class="mactions">
+      <button class="btn sec" onclick="closeDel()">Cancel</button>
+      <button class="btn danger-solid" id="delConfirmBtn" onclick="confirmDelete()" disabled>Delete permanently</button>
+    </div>
+  </div>
+</div>
+
+<!-- generic in-app confirmation (replaces browser confirm popups) -->
+<div class="modal no-print" id="confirmModal" onclick="if(event.target===this)confirmResolve(false)">
+  <div class="modalbox">
+    <div class="mh" id="confirmTitle"></div>
+    <p class="mp" id="confirmBody"></p>
+    <div class="mactions">
+      <button class="btn sec" onclick="confirmResolve(false)">Cancel</button>
+      <button class="btn danger-solid" id="confirmOkBtn" onclick="confirmResolve(true)">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- payments ledger (money received + receipt proof) -->
+<div class="modal no-print" id="payModal" onclick="if(event.target===this)closePayments()">
+  <div class="modalbox" style="max-width:720px">
+    <div class="mh" id="payTitle">Payments received</div>
+    <div id="paySummary" style="display:flex;gap:18px;flex-wrap:wrap;margin:2px 0 14px;font-size:13px"></div>
+    <table class="tbl" style="font-size:13px"><thead><tr>
+      <th>Date</th><th>Method</th><th>Note</th><th style="text-align:right">Amount</th><th>Receipt</th><th></th>
+    </tr></thead><tbody id="payRows"></tbody></table>
+    <div style="margin-top:16px;padding:14px;border:1px solid var(--line,#e5e7eb);border-radius:12px;background:var(--panel,#fafafa)">
+      <div style="font-weight:700;margin-bottom:10px">Record a payment</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label class="req">Amount (RM)</label><input id="pay-amount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Date received</label><input id="pay-date" type="date"></div>
+        <div class="field"><label>Method</label>
+          <select id="pay-method"><option>Bank transfer</option><option>Cash</option><option>Cheque</option><option>Card</option><option>E-wallet</option><option>Other</option></select></div>
+        <div class="field"><label>Note (optional)</label><input id="pay-note" placeholder="e.g. 50% advance"></div>
+      </div>
+      <div class="field" style="margin-top:10px"><label>Receipt / proof (image or PDF, optional)</label>
+        <input id="pay-receipt" type="file" accept="image/*,application/pdf"></div>
+      <div class="row-actions" style="margin-top:12px">
+        <button class="btn sm" style="background:#0d7a6b" onclick="submitPayment()">Add payment</button>
+        <button class="btn ghost sm" onclick="closePayments()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   UBOLD Quotation & Invoice — front-end
+   ============================================================ */
+const API = '';
+let TOKEN = localStorage.getItem('ubold_token') || sessionStorage.getItem('ubold_token') || '';
+function storeToken(tok, remember){
+  localStorage.removeItem('ubold_token'); sessionStorage.removeItem('ubold_token');
+  (remember ? localStorage : sessionStorage).setItem('ubold_token', tok);
+}
+function clearToken(){ localStorage.removeItem('ubold_token'); sessionStorage.removeItem('ubold_token'); }
+let CURRENT_USER = null;
+let CUSTOMERS = [];
+let QUOTATIONS = [];
+let MODE = 'quotation';        // builder mode
+let EDIT_ID = null;            // id when editing an existing doc
+let CURRENT_DOC = null;        // last doc shown in print view
+const APP_TITLE = document.title;  // restored when not viewing a document
+let NEXT_ID = null;            // id a new doc will get when saved
+/* Exported-PDF name: "QT-003 02_10_2026" (ID + DD_MM_YYYY).
+   The browser's Print / Save-PDF dialog uses document.title as the default file name. */
+function pdfBaseName(type,doc){
+  const id=(type==='quotation'?doc.quotation_id:doc.invoice_id)||'document';
+  const m=String(doc.date||'').slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return id + (m ? ' '+m[3]+'_'+m[2]+'_'+m[1] : '');
+}
+let PREVIEW_MODE = false;      // true when showing an unsaved preview
+let custFormInBuilder = false;
+
+const STATUS_OPTS = {
+  // 'accepted' is applied automatically when the signed copy is uploaded — not a manual choice.
+  quotation:['pending','expired','rejected'],
+  invoice:['unpaid','partial','paid']
+};
+// Units of measure suited to a design studio
+const UOM_OPTIONS = ['SET','UNIT','PCS','HOUR','DAY','PROJECT','PACKAGE','PAGE','CONCEPT','REVISION','SQ FT','LUMP SUM'];
+function uomSelect(val){
+  const v=(val||'').trim();
+  const known=UOM_OPTIONS.some(o=>o.toUpperCase()===v.toUpperCase());
+  let opts='<option value=""'+(v?'':' selected')+'>—</option>';
+  UOM_OPTIONS.forEach(o=>{ const sel=(o.toUpperCase()===v.toUpperCase())?' selected':''; opts+='<option'+sel+'>'+o+'</option>'; });
+  if(v && !known) opts+='<option selected>'+esc(v)+'</option>'; // keep a custom value from older docs
+  return '<select class="c i-uom">'+opts+'</select>';
+}
+const TITLE_OPTIONS = '<option value="">Title</option><option>Mr</option><option>Mrs</option><option>Ms</option><option>Miss</option><option>Mdm</option><option>Dr</option>';
+// Combine an honorific title with a name, e.g. ("Ms","Loh Jin Qi") -> "Ms. Loh Jin Qi"
+function joinTitle(title,name){ title=(title||'').trim(); name=(name||'').trim(); return title ? title+'. '+name : name; }
+const COMPANY = {
+  name:'UBOLD DESIGN LAB', reg:'202603238260', reg2:'(003886944-A)',
+  email:'info@ubolddesign.com', web:'www.ubolddesign.com', phone:'+60 17-352 1620', ig:'@ubold_design',
+  bank:'OCBC', holder:'UBOLD DESIGN', acc:'7861388213'
+};
+const INTRO_QT = "Thank you for your interest in our service. We are pleased to provide you with the following quotation based on your requirements. Please find the details below:";
+const INTRO_INV = "It's been a pleasure bringing your vision to life! Our project is now wrapped up and delivered, and we couldn't be happier with how it turned out. Please find the final invoice for the remaining balance below — and if you've already sent it through, please disregard this note with our thanks!";
+const TERMS = "This quotation is a cost estimate only and is not a formal invoice. It is valid for 30 days from the date of issue, and prices may change after it expires. A non-refundable 50% advance payment is due when the quotation is accepted. It confirms your booking and secures our team's time, and work begins once we receive it. The remaining 50% is due when the work is complete, and all final files and assets will be released to the client once full payment is received. Work will be delivered by the Delivery Date stated in this quotation, as long as the advance payment and all required materials reach us on time. Late materials or late feedback may push the Delivery Date back. Each item includes up to 3 rounds of revisions, and any further revisions will be charged separately. Additional scope requests may change the final price and Delivery Date. For any enquiries, please contact us at admin@ubolddesign.com or WhatsApp at +60 17-352 1620.";
+const COPYRIGHT = "UBOLD Design team retains full copyright ownership of all original designs, artwork, and creative materials produced for this project. Upon receipt of final payment, the Client receives exclusive rights to use these designs for their business purposes, including but not limited to: branding, packaging, social media, marketing materials, and product launches. The Client may not resell, redistribute, or license the designs to third parties without prior written consent from UBOLD Design team.";
+/* advance % taken from a term string like "30% Advance Payment"; Full Payment = 100 */
+function advPctOf(term){
+  const m=(term||'').match(/(\d+)\s*%/);
+  if(m) return Math.max(0,Math.min(100,parseInt(m[1],10)));
+  if(/full/i.test(term||'')) return 100;
+  return 50;
+}
+/* Terms & Conditions text with the advance / balance split filled in from the chosen %. */
+function termsText(pct){
+  pct=Math.max(0,Math.min(100,Math.round(pct||50))); const rem=100-pct;
+  const tail=" It confirms your booking and secures our team's time, and work begins once we receive it. "
+    +(pct>=100
+       ? "All final files and assets will be released to the client once full payment is received."
+       : "The remaining "+rem+"% is due when the work is complete, and all final files and assets will be released to the client once full payment is received.")
+    +" Work will be delivered by the Delivery Date stated in this quotation, as long as the "+(pct>=100?"payment":"advance payment")+" and all required materials reach us on time. Late materials or late feedback may push the Delivery Date back. Each item includes up to 3 rounds of revisions, and any further revisions will be charged separately. Additional scope requests may change the final price and Delivery Date. For any enquiries, please contact us at admin@ubolddesign.com or WhatsApp at +60 17-352 1620.";
+  const head="This quotation is a cost estimate only and is not a formal invoice. It is valid for 30 days from the date of issue, and prices may change after it expires. "
+    +(pct>=100 ? "Full payment is due when the quotation is accepted." : "A non-refundable "+pct+"% advance payment is due when the quotation is accepted.");
+  return head+tail;
+}
+
+/* ---------- api ---------- */
+async function api(path, method='GET', body){
+  const opt={method,headers:{'Content-Type':'application/json'}};
+  if(TOKEN) opt.headers['Authorization']='Bearer '+TOKEN;
+  if(body) opt.body=JSON.stringify(body);
+  const r=await fetch(API+path,opt);
+  if(r.status===401 && !path.startsWith('/api/auth/')){ logoutToAuth(); throw new Error('Your session has expired — please sign in again.'); }
+  if(!r.ok){ const e=await r.json().catch(()=>({error:r.statusText})); throw new Error(e.error||'Request failed'); }
+  return r.json();
+}
+function flash(msg,err){ const w=document.getElementById('flashwrap'); const d=document.createElement('div');
+  d.className='flash'+(err?' err':''); d.textContent=(err?'⚠ ':'✓ ')+msg; w.appendChild(d);
+  setTimeout(()=>{d.style.opacity='0';d.style.transition='.3s';setTimeout(()=>d.remove(),300);},2600); }
+
+/* ---------- helpers ---------- */
+function num(v){ v=(''+(v??'')).replace(/[^0-9.\-]/g,''); const n=parseFloat(v); return isNaN(n)?0:n; }
+function money(n){ return 'MYR '+Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return (''+(s??'')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(iso){ if(!iso) return ''; const p=(''+iso).split('-'); return p.length===3? p[2]+'/'+p[1]+'/'+p[0] : iso; }
+function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+/* ---------- number to words ---------- */
+function ringgitWords(amount){
+  const r=Math.floor(amount), sen=Math.round((amount-r)*100);
+  let s='RINGGIT MALAYSIA '+words(r);
+  if(sen>0) s+=' AND '+words(sen)+' SEN';
+  return (s+' ONLY.').toUpperCase().replace(/\s+/g,' ').trim();
+}
+function words(n){
+  if(n===0) return 'ZERO';
+  const o=['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'];
+  const t=['','','TWENTY','THIRTY','FORTY','FIFTY','SIXTY','SEVENTY','EIGHTY','NINETY'];
+  function b(x){let r='';if(x>=100){r+=o[Math.floor(x/100)]+' HUNDRED';x%=100;if(x)r+=' ';}
+    if(x>=20){r+=t[Math.floor(x/10)];x%=10;if(x)r+='-'+o[x];}else if(x>0){r+=o[x];}return r;}
+  let r='';for(const [nm,v] of [['MILLION',1e6],['THOUSAND',1e3]]){if(n>=v){r+=b(Math.floor(n/v))+' '+nm+' ';n%=v;}}
+  if(n>0)r+=b(n);return r.trim();
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+function setActive(id){ document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active')); if(id)document.getElementById(id).classList.add('active'); }
+function hideAll(){ ['view-docs','view-finance','view-customers','view-builder','view-print','view-profile','view-team'].forEach(v=>document.getElementById(v).style.display='none'); document.title=APP_TITLE; }
+function setTitle(t,s){ document.getElementById('pageTitle').textContent=t; document.getElementById('pageSub').textContent=s||''; document.getElementById('topActions').innerHTML=''; }
+
+async function showDocs(){
+  hideAll(); document.getElementById('view-docs').style.display=''; setActive('nav-docs');
+  setTitle('Documents','Quotations & invoices in the database');
+  await loadDocs();
+}
+let HISTORY=[];        // unified list of all documents
+let FILTER='all';
+async function loadDocs(){
+  try{
+    QUOTATIONS = await api('/api/quotations');
+    const invs  = await api('/api/invoices');
+    const custs = await api('/api/customers');
+    CUSTOMERS = custs;
+    // build unified history
+    HISTORY = [];
+    QUOTATIONS.forEach(q=>HISTORY.push({
+      type:'quotation', id:q.quotation_id, ref:null,
+      customer:q.customer_company||q.customer_name||q.customer_id, customer_name:q.customer_name||'',
+      customer_id:q.customer_id, date:q.date, created_at:q.created_at, status:q.status, amount:q.total,
+      locked:q.status==='accepted', signed:!!q.signed_at
+    }));
+    invs.forEach(iv=>HISTORY.push({
+      type:'invoice', id:iv.invoice_id, ref:iv.quotation_id,
+      customer:iv.customer_company||iv.customer_name||iv.customer_id, customer_name:iv.customer_name||'',
+      customer_id:iv.customer_id, date:iv.date, created_at:iv.created_at, status:iv.status, amount:iv.balance_due,
+      locked:false, signed:false
+    }));
+    HISTORY.sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'') || b.id.localeCompare(a.id));
+    renderStats(custs.length, invs);
+    fillCustomerFilter();
+    renderHistory();
+  }catch(e){ flash(e.message,true); }
+}
+function fillCustomerFilter(){
+  const sel=document.getElementById('fCust'); if(!sel) return;
+  const keep=sel.value;
+  sel.innerHTML='<option value="">All customers</option>';
+  CUSTOMERS.forEach(c=>{ const o=document.createElement('option'); o.value=c.customer_id;
+    o.textContent=(c.company? c.company+' — ':'')+c.name+' ('+c.customer_id+')'; sel.appendChild(o); });
+  sel.value=keep;
+}
+function clearFilters(){
+  document.getElementById('docSearch').value='';
+  document.getElementById('fStatus').value='';
+  document.getElementById('fCust').value='';
+  document.getElementById('fFrom').value='';
+  document.getElementById('fTo').value='';
+  setFilter('all');
+}
+const _sico=(inner)=>`<svg class="sico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+const STAT_ICONS={
+  quotations:_sico('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'),
+  invoices:_sico('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'),
+  customers:_sico('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+  earned:_sico('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'),
+  outstanding:_sico('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
+  chart:_sico('<path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7"/><rect x="12" y="6" width="3" height="11"/><rect x="17" y="13" width="3" height="4"/>'),
+  check:_sico('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'),
+  reject:_sico('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'),
+  expired:_sico('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'),
+};
+function renderStats(custCount, invs){
+  // accepted quotations without an invoice: advance already received, remainder owed
+  const proforma = acceptedQuoteReceivables(QUOTATIONS, invs);
+  const outstanding = invs.reduce((s,i)=>s+invOutstanding(i),0)
+                    + proforma.reduce((s,p)=>s+p.outstanding,0);
+  // money actually received: logged payments where present, else the estimate, plus signed-quotation receipts
+  const earned = invs.reduce((s,i)=>s+receivedOf(i),0)
+               + proforma.reduce((s,p)=>s+p.received,0);
+  const quoted = QUOTATIONS.reduce((s,q)=>s+(q.total||0),0);
+  const cards=[
+    {ic:'quotations', lab:'Quotations', val:QUOTATIONS.length, sub:money(quoted)+' quoted'},
+    {ic:'invoices', lab:'Invoices', val:invs.length, sub:invs.length+' issued'},
+    {ic:'customers', lab:'Customers', val:custCount, sub:'in database'},
+    {ic:'earned', lab:'Total Earned', val:money(earned), sub:'received to date', good:true},
+    {ic:'outstanding', lab:'Outstanding', val:money(outstanding), sub:'unpaid balance', accent:true},
+  ];
+  document.getElementById('statCards').innerHTML = cards.map(c=>`
+    <div class="stat ${c.accent?'accent':''} ${c.good?'good':''}">
+      <div class="lab">${STAT_ICONS[c.ic]}<span>${c.lab}</span></div><div class="val">${c.val}</div><div class="sub">${c.sub}</div>
+    </div>`).join('');
+}
+function setFilter(f){
+  FILTER=f;
+  document.querySelectorAll('#docFilter button').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
+  renderHistory();
+}
+function fmtCreated(ts){
+  if(!ts) return '—';
+  const [d,t]=(''+ts).split(' '); const p=(d||'').split('-');
+  const date = p.length===3? p[2]+'/'+p[1]+'/'+p[0] : d;
+  return `<b>${date}</b>${t?'<br><span style="font-size:11px">'+t.slice(0,5)+'</span>':''}`;
+}
+function renderHistory(){
+  const q=(document.getElementById('docSearch').value||'').toLowerCase().trim();
+  const fStatus=document.getElementById('fStatus').value;
+  const fCust=document.getElementById('fCust').value;
+  const fFrom=document.getElementById('fFrom').value;
+  const fTo=document.getElementById('fTo').value;
+  const rows = HISTORY.filter(h=>{
+    if(FILTER!=='all' && h.type!==FILTER) return false;
+    if(fStatus && h.status!==fStatus) return false;
+    if(fCust && h.customer_id!==fCust) return false;
+    if(fFrom && (!h.date || h.date<fFrom)) return false;
+    if(fTo && (!h.date || h.date>fTo)) return false;
+    if(q && !((h.id+' '+h.customer+' '+h.customer_name+' '+(h.customer_id||'')).toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const rc=document.getElementById('resultCount');
+  if(rc) rc.textContent = 'Showing '+rows.length+' of '+HISTORY.length+' document'+(HISTORY.length===1?'':'s');
+  const tb=document.getElementById('histRows'); tb.innerHTML='';
+  if(!rows.length){
+    tb.innerHTML='<tr><td colspan="8" class="empty">'+(HISTORY.length?'No documents match your filters.':'Nothing created yet. Use “New Quotation” or “New Invoice” to start.')+'</td></tr>';
+    return;
+  }
+  rows.forEach(h=>{
+    tb.insertAdjacentHTML('beforeend',`<tr>
+      <td class="created">${fmtCreated(h.created_at)}</td>
+      <td><span class="typetag ${h.type}">${h.type==='quotation'?'QUOTE':'INVOICE'}</span></td>
+      <td class="idcell">${esc(h.id)}${h.ref?`<div class="muted" style="font-size:10.5px;font-weight:400">ref ${esc(h.ref)}</div>`:''}</td>
+      <td>${esc(h.customer)}<div class="muted" style="font-size:11px">${esc(h.customer_name)}</div></td>
+      <td>${fmtDate(h.date)}</td>
+      <td><span class="tag ${h.status}">${esc(h.status)}</span></td>
+      <td class="money">${money(h.amount)}</td>
+      <td><div class="row-actions" style="justify-content:flex-end">
+        <button class="btn ghost sm" onclick="openDoc('${h.type}','${h.id}')">Open</button>
+        ${h.locked
+          ? `<button class="btn sec sm" disabled title="Accepted & signed — locked. Open it to remove the signed copy if you need to edit." style="opacity:.45;cursor:not-allowed">✎ Edit</button>`
+          : `<button class="btn sec sm" onclick="editDoc('${h.type}','${h.id}')">✎ Edit</button>`}
+        <button class="btn danger sm" onclick="delDoc('${h.type}','${h.id}')" title="Delete">✕</button>
+      </div></td></tr>`);
+  });
+}
+
+/* ============================================================
+   FINANCE
+   ============================================================ */
+/* Money received on an invoice = the advance recorded on it PLUS the balance
+   payments logged against it (capped at the subtotal). When nothing is logged yet,
+   fall back to the old estimate (full subtotal if marked paid, else the advance). */
+function receivedOf(iv){
+  const pays=+iv.paid||0;
+  if(pays>0) return Math.min((+iv.advance_paid||0)+pays, +iv.subtotal||0);
+  return iv.status==='paid' ? (iv.subtotal||0) : (iv.advance_paid||0);
+}
+function invOutstanding(iv){ return Math.max((iv.subtotal||0)-receivedOf(iv),0); }
+/* advance a quotation's term implies (e.g. 50% of the total; 100% for Full Payment) */
+function quoteAdvance(q){ return +(((q.total||0)*advPctOf(q.term)/100).toFixed(2)); }
+/* Money received on a signed quotation: logged payments if any, else the advance its term implies. */
+function quoteReceived(q){ return (+q.paid||0)>0 ? +q.paid : quoteAdvance(q); }
+/* Accepted quotations not yet turned into an invoice.
+   A signed copy = the client agreed; actual logged payments are the money received
+   (falling back to the advance the term implies when none are logged yet). The
+   remainder is still outstanding. Quotations that already have an invoice are
+   skipped (the invoice carries the money). */
+function acceptedQuoteReceivables(quotes, invs){
+  const invoiced=new Set((invs||[]).map(i=>i.quotation_id).filter(Boolean));
+  return (quotes||[]).filter(q=>q.status==='accepted' && !invoiced.has(q.quotation_id))
+    .map(q=>{ const rec=quoteReceived(q); return {
+      id:q.quotation_id, customer:q.customer_company||q.customer_name||q.customer_id, customer_id:q.customer_id,
+      total:(q.total||0), received:rec, outstanding:Math.max((q.total||0)-rec,0), term:q.term }; });
+}
+function monthLabel(ym){
+  if(!ym||ym==='—') return 'No date';
+  const [y,mo]=ym.split('-'); const n=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return (n[parseInt(mo)-1]||mo)+' '+y;
+}
+async function showFinance(){
+  hideAll(); document.getElementById('view-finance').style.display=''; setActive('nav-finance');
+  setTitle('Finance','Earnings, receivables & pipeline');
+  try{
+    const invs = await api('/api/invoices');
+    const qts  = await api('/api/quotations');
+    // accepted quotations without an invoice count as pro-forma receivables (advance already paid)
+    const proforma = acceptedQuoteReceivables(qts, invs);
+    const invoiced   = invs.reduce((s,i)=>s+(i.subtotal||0),0) + proforma.reduce((s,p)=>s+p.total,0);
+    const received   = invs.reduce((s,i)=>s+receivedOf(i),0)   + proforma.reduce((s,p)=>s+p.received,0);
+    const outstanding= invs.reduce((s,i)=>s+invOutstanding(i),0)
+                     + proforma.reduce((s,p)=>s+p.outstanding,0);
+    const rate = invoiced>0 ? Math.round(received/invoiced*100) : 0;
+    const paidCount = invs.filter(i=>i.status==='paid').length;
+
+    // top cards
+    document.getElementById('finStats').innerHTML = [
+      {ic:'invoices', lab:'Total Billed', val:money(invoiced), sub:invs.length+' invoice'+(invs.length===1?'':'s')+(proforma.length?' · '+proforma.length+' signed quote'+(proforma.length===1?'':'s'):'')},
+      {ic:'earned', lab:'Received', val:money(received), sub:'collected to date', good:true},
+      {ic:'outstanding', lab:'Outstanding', val:money(outstanding), sub:'still owed', accent:true},
+      {ic:'chart', lab:'Collection Rate', val:rate+'%', sub:paidCount+' paid in full'},
+    ].map(c=>`<div class="stat ${c.accent?'accent':''} ${c.good?'good':''}">
+        <div class="lab">${STAT_ICONS[c.ic]}<span>${c.lab}</span></div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join('');
+
+    // collection bar
+    const recPct = invoiced>0 ? received/invoiced*100 : 0;
+    const outPct = invoiced>0 ? outstanding/invoiced*100 : 0;
+    document.getElementById('finProgress').innerHTML =
+      `<div class="seg-received" style="width:${recPct}%"></div><div class="seg-outstanding" style="width:${outPct}%"></div>`;
+    document.getElementById('finLegend').innerHTML =
+      `<span><span class="dot" style="background:var(--ok)"></span>Received ${money(received)} (${rate}%)</span>
+       <span><span class="dot" style="background:var(--accent)"></span>Outstanding ${money(outstanding)}</span>
+       <span><span class="dot" style="background:#edeff2"></span>Invoiced ${money(invoiced)}</span>`;
+
+    // receivables by invoice
+    const ib=document.getElementById('finInvRows'); ib.innerHTML='';
+    if(!invs.length && !proforma.length) ib.innerHTML='<tr><td colspan="6" class="empty">No invoices or signed quotations yet.</td></tr>';
+    invs.forEach(iv=>{
+      const rec=receivedOf(iv), out=invOutstanding(iv);
+      ib.insertAdjacentHTML('beforeend',`<tr>
+        <td class="idcell"><a style="cursor:pointer;color:var(--accent)" onclick="openDoc('invoice','${iv.invoice_id}')">${esc(iv.invoice_id)}</a></td>
+        <td>${esc(iv.customer_company||iv.customer_name||iv.customer_id)}</td>
+        <td class="money">${money(iv.subtotal)}</td>
+        <td class="money" style="color:var(--ok)">${money(rec)}</td>
+        <td class="money" style="color:${out>0?'var(--accent)':'var(--ink-soft)'}">${money(out)}</td>
+        <td><span class="tag ${iv.status}">${esc(iv.status)}</span></td></tr>`);
+    });
+    // accepted quotations awaiting their balance invoice
+    proforma.forEach(p=>{
+      ib.insertAdjacentHTML('beforeend',`<tr>
+        <td class="idcell"><a style="cursor:pointer;color:var(--accent)" onclick="openDoc('quotation','${p.id}')">${esc(p.id)}</a></td>
+        <td>${esc(p.customer)}</td>
+        <td class="money">${money(p.total)}</td>
+        <td class="money" style="color:var(--ok)">${money(p.received)}</td>
+        <td class="money" style="color:${p.outstanding>0?'var(--accent)':'var(--ink-soft)'}">${money(p.outstanding)}</td>
+        <td><span class="tag accepted">signed</span></td></tr>`);
+    });
+    document.getElementById('finInvFoot').innerHTML = (invs.length||proforma.length)?`<tr>
+      <td colspan="2" style="font-weight:800">Total</td>
+      <td class="money" style="font-weight:800">${money(invoiced)}</td>
+      <td class="money" style="font-weight:800;color:var(--ok)">${money(received)}</td>
+      <td class="money" style="font-weight:800;color:var(--accent)">${money(outstanding)}</td><td></td></tr>`:'';
+
+    // by customer
+    const byCust={};
+    invs.forEach(iv=>{
+      const k=iv.customer_id, name=iv.customer_company||iv.customer_name||k;
+      if(!byCust[k]) byCust[k]={name, invoiced:0, received:0, outstanding:0};
+      byCust[k].invoiced   += (iv.subtotal||0);
+      byCust[k].received   += receivedOf(iv);
+      byCust[k].outstanding+= invOutstanding(iv);
+    });
+    proforma.forEach(p=>{
+      if(!byCust[p.customer_id]) byCust[p.customer_id]={name:p.customer, invoiced:0, received:0, outstanding:0};
+      byCust[p.customer_id].invoiced   += p.total;
+      byCust[p.customer_id].received   += p.received;
+      byCust[p.customer_id].outstanding+= p.outstanding;
+    });
+    const cb=document.getElementById('finCustRows'); cb.innerHTML='';
+    const custList=Object.values(byCust).sort((a,b)=>b.outstanding-a.outstanding);
+    if(!custList.length) cb.innerHTML='<tr><td colspan="4" class="empty">No invoiced customers yet.</td></tr>';
+    custList.forEach(c=>{
+      const pct=c.invoiced>0? Math.round(c.received/c.invoiced*100):0;
+      cb.insertAdjacentHTML('beforeend',`<tr>
+        <td>${esc(c.name)}</td>
+        <td class="money">${money(c.invoiced)}</td>
+        <td class="barcell"><div class="money" style="color:var(--ok)">${money(c.received)} <span class="muted" style="font-weight:600">(${pct}%)</span></div>
+          <div class="minibar"><span style="width:${pct}%"></span></div></td>
+        <td class="money" style="color:${c.outstanding>0?'var(--accent)':'var(--ink-soft)'}">${money(c.outstanding)}</td></tr>`);
+    });
+
+    // monthly income
+    const byMonth={};
+    invs.forEach(iv=>{
+      const ym=(iv.date||'').slice(0,7)||'—';
+      if(!byMonth[ym]) byMonth[ym]={count:0,invoiced:0,received:0,outstanding:0};
+      byMonth[ym].count++;
+      byMonth[ym].invoiced   += (iv.subtotal||0);
+      byMonth[ym].received   += receivedOf(iv);
+      byMonth[ym].outstanding+= invOutstanding(iv);
+    });
+    proforma.forEach(p=>{
+      const q=qts.find(x=>x.quotation_id===p.id)||{};
+      const ym=(q.date||'').slice(0,7)||'—';
+      if(!byMonth[ym]) byMonth[ym]={count:0,invoiced:0,received:0,outstanding:0};
+      byMonth[ym].count++;
+      byMonth[ym].invoiced   += p.total;
+      byMonth[ym].received   += p.received;
+      byMonth[ym].outstanding+= p.outstanding;
+    });
+    const months=Object.keys(byMonth).sort().reverse();
+    const mb=document.getElementById('finMonthRows'); mb.innerHTML='';
+    if(!months.length) mb.innerHTML='<tr><td colspan="5" class="empty">No invoices yet.</td></tr>';
+    months.forEach(m=>{
+      const d=byMonth[m]; const pct=d.invoiced>0?Math.round(d.received/d.invoiced*100):0;
+      mb.insertAdjacentHTML('beforeend',`<tr>
+        <td style="font-weight:700">${monthLabel(m)}</td>
+        <td class="money">${d.count}</td>
+        <td class="money">${money(d.invoiced)}</td>
+        <td class="barcell"><div class="money" style="color:var(--ok)">${money(d.received)} <span class="muted" style="font-weight:600">(${pct}%)</span></div>
+          <div class="minibar"><span style="width:${pct}%"></span></div></td>
+        <td class="money" style="color:${d.outstanding>0?'var(--accent)':'var(--ink-soft)'}">${money(d.outstanding)}</td></tr>`);
+    });
+    document.getElementById('finMonthFoot').innerHTML = months.length?`<tr>
+      <td style="font-weight:800">All months</td>
+      <td class="money" style="font-weight:800">${invs.length+proforma.length}</td>
+      <td class="money" style="font-weight:800">${money(invoiced)}</td>
+      <td class="money" style="font-weight:800;color:var(--ok)">${money(received)}</td>
+      <td class="money" style="font-weight:800;color:var(--accent)">${money(outstanding)}</td></tr>`:'';
+
+    // quotation pipeline
+    const stage=(s)=>qts.filter(q=>q.status===s).reduce((a,q)=>a+(q.total||0),0);
+    const pipe=[
+      {ic:'check', lab:'Accepted (signed)', val:money(stage('accepted')), sub:qts.filter(q=>q.status==='accepted').length+' quotation(s)', good:true},
+      {ic:'outstanding', lab:'Pending', val:money(stage('pending')), sub:qts.filter(q=>q.status==='pending').length+' awaiting signature'},
+      {ic:'reject', lab:'Rejected', val:money(stage('rejected')), sub:qts.filter(q=>q.status==='rejected').length+' declined'},
+      {ic:'expired', lab:'Expired', val:money(stage('expired')), sub:qts.filter(q=>q.status==='expired').length+' lapsed', accent:true},
+    ];
+    document.getElementById('finPipeline').innerHTML = pipe.map(c=>`<div class="stat ${c.accent?'accent':''} ${c.good?'good':''}">
+        <div class="lab">${STAT_ICONS[c.ic]}<span>${c.lab}</span></div><div class="val" style="font-size:20px">${c.val}</div><div class="sub">${c.sub}</div></div>`).join('');
+  }catch(e){ flash(e.message,true); }
+}
+
+/* ============================================================
+   CUSTOMERS
+   ============================================================ */
+async function showCustomers(){
+  hideAll(); document.getElementById('view-customers').style.display=''; setActive('nav-customers');
+  setTitle('Customers','Add and manage your clients');
+  await loadCustomers();
+}
+async function loadCustomers(){
+  try{
+    CUSTOMERS = await api('/api/customers');
+    const b=document.getElementById('custRows'); if(!b) return; b.innerHTML='';
+    if(!CUSTOMERS.length) b.innerHTML='<tr><td colspan="6" class="empty">No customers yet. Click “Add customer”.</td></tr>';
+    CUSTOMERS.forEach(c=>{
+      b.insertAdjacentHTML('beforeend',`<tr class="clickrow" title="Click to edit" onclick="editCustomer('${c.customer_id}')">
+        <td class="idcell">${esc(c.customer_id)}</td>
+        <td>${esc(c.name)}</td><td>${esc(c.company||'')}</td>
+        <td>${esc(c.phone||'')}</td><td>${esc(c.nric_tin||'')}</td>
+        <td style="text-align:right;white-space:nowrap" onclick="event.stopPropagation()">
+          <button class="btn ghost sm" onclick="editCustomer('${c.customer_id}')">Edit</button>
+          <button class="btn ghost sm" onclick="newDocFor('quotation','${c.customer_id}')">New QT</button>
+        </td>
+      </tr>`);
+    });
+  }catch(e){ flash(e.message,true); }
+}
+let custFormOpen=false;
+let editingCustId=null;
+function toggleCustForm(fromBuilder){
+  custFormInBuilder = !!fromBuilder;
+  if(fromBuilder){
+    // render the inline form inside the builder
+    const host=document.getElementById('builderCustForm');
+    if(host.innerHTML){ host.innerHTML=''; return; }
+    host.innerHTML = custFormHTML();
+  }else{
+    // if the form is open editing someone, the Add button switches it to "new"
+    if(custFormOpen && editingCustId){ resetCustForm(); return; }
+    custFormOpen=!custFormOpen;
+    document.getElementById('custFormWrap').style.display=custFormOpen?'':'none';
+    if(custFormOpen) resetCustForm();
+  }
+}
+function closeCustForm(){
+  custFormOpen=false; editingCustId=null;
+  document.getElementById('custFormWrap').style.display='none';
+}
+/* put the customer form back into "create" mode */
+function resetCustForm(){
+  editingCustId=null;
+  ['cf-name','cf-company','cf-tin','cf-phone','cf-address'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cf-title').value='';
+  document.getElementById('cf-heading').textContent='New customer';
+  document.getElementById('cf-save').textContent='Save customer';
+  document.getElementById('cf-delete').style.display='none';
+  const ip=document.getElementById('cf-idprev'); if(ip) ip.style.display='';
+  refreshNextIds();
+}
+/* split a stored "Ms. Loh Jin Qi" into title + name for the form */
+function splitTitle(full){
+  full=(full||'').trim();
+  const m=full.match(/^(Mr|Mrs|Ms|Miss|Mdm|Dr)\.\s+(.+)$/);
+  return m ? {title:m[1], name:m[2]} : {title:'', name:full};
+}
+function editCustomer(cid){
+  const c=CUSTOMERS.find(x=>x.customer_id===cid);
+  if(!c){ flash('Customer not found',true); return; }
+  editingCustId=cid;
+  const st=splitTitle(c.name);
+  document.getElementById('cf-title').value=st.title;
+  document.getElementById('cf-name').value=st.name;
+  document.getElementById('cf-company').value=c.company||'';
+  document.getElementById('cf-tin').value=c.nric_tin||'';
+  document.getElementById('cf-phone').value=c.phone||'';
+  document.getElementById('cf-address').value=c.address||'';
+  document.getElementById('cf-heading').textContent='Edit customer '+cid;
+  document.getElementById('cf-save').textContent='Save changes';
+  document.getElementById('cf-delete').style.display='';
+  const ip=document.getElementById('cf-idprev'); if(ip) ip.style.display='none';
+  custFormOpen=true;
+  const wrap=document.getElementById('custFormWrap');
+  wrap.style.display=''; wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function deleteCustomer(){
+  if(!editingCustId) return;
+  const c=CUSTOMERS.find(x=>x.customer_id===editingCustId)||{};
+  const label=editingCustId+(c.name? ' — '+c.name : '');
+  if(!await appConfirm({
+    title:'Delete customer?',
+    body:'Delete customer <b>'+esc(label)+'</b>?',
+    confirmText:'Delete'
+  })) return;
+  if(!await appConfirm({
+    title:'Are you sure?',
+    body:'This cannot be undone. Permanently delete <b>'+esc(editingCustId)+'</b>?',
+    confirmText:'Delete permanently'
+  })) return;
+  try{
+    await api('/api/customers/'+editingCustId,'DELETE');
+    flash('Deleted customer '+editingCustId);
+    closeCustForm();
+    await loadCustomers();
+  }catch(e){ flash(e.message,true); }
+}
+function custFormHTML(){
+  return `<div class="inlineform">
+    <div style="font-weight:800;font-size:13px;margin-bottom:10px">New customer</div>
+    <div class="grid2">
+      <div class="field"><label class="req">Contact name</label>
+        <div style="display:flex;gap:8px">
+          <select id="bcf-title" style="flex:0 0 112px">${TITLE_OPTIONS}</select>
+          <input id="bcf-name" style="flex:1" placeholder="Full name">
+        </div>
+      </div>
+      <div class="field"><label>Company</label><input id="bcf-company" placeholder="Company name (optional)"></div>
+      <div class="field"><label>NRIC / TIN</label><input id="bcf-tin" placeholder="ID or tax number"></div>
+      <div class="field"><label>Phone</label><input id="bcf-phone" placeholder="Contact number"></div>
+      <div class="field full"><label>Address</label><textarea id="bcf-address" placeholder="Street, city, postcode, state"></textarea></div>
+    </div>
+    <div class="row-actions" style="margin-top:12px">
+      <button class="btn sm" onclick="saveCustomerBuilder()">Save & select</button>
+      <button class="btn ghost sm" onclick="document.getElementById('builderCustForm').innerHTML=''">Cancel</button>
+    </div></div>`;
+}
+async function refreshNextIds(){
+  try{ const ids=await api('/api/next-ids');
+    const el=document.getElementById('cf-idprev'); if(el) el.innerHTML='Will be saved as <b>'+ids.customer+'</b>';
+  }catch(e){}
+}
+async function saveCustomer(){
+  const nameInput=document.getElementById('cf-name').value.trim();
+  if(!nameInput){ flash('Contact name is required',true); return; }
+  const name=joinTitle(document.getElementById('cf-title').value, nameInput);
+  const payload={
+    name, company:document.getElementById('cf-company').value.trim(),
+    nric_tin:document.getElementById('cf-tin').value.trim(),
+    phone:document.getElementById('cf-phone').value.trim(),
+    address:document.getElementById('cf-address').value.trim()
+  };
+  try{
+    if(editingCustId){
+      const c=await api('/api/customers/'+editingCustId,'PUT',payload);
+      flash('Updated customer '+c.customer_id);
+    }else{
+      const c=await api('/api/customers','POST',payload);
+      flash('Saved customer '+c.customer_id);
+    }
+    closeCustForm();
+    await loadCustomers();
+  }catch(e){ flash(e.message,true); }
+}
+async function saveCustomerBuilder(){
+  const nameInput=document.getElementById('bcf-name').value.trim();
+  if(!nameInput){ flash('Contact name is required',true); return; }
+  const name=joinTitle(document.getElementById('bcf-title').value, nameInput);
+  try{
+    const c=await api('/api/customers','POST',{
+      name, company:document.getElementById('bcf-company').value.trim(),
+      nric_tin:document.getElementById('bcf-tin').value.trim(),
+      phone:document.getElementById('bcf-phone').value.trim(),
+      address:document.getElementById('bcf-address').value.trim()
+    });
+    flash('Saved customer '+c.customer_id);
+    CUSTOMERS = await api('/api/customers');
+    fillCustomerSelect(c.customer_id);
+    document.getElementById('builderCustForm').innerHTML='';
+  }catch(e){ flash(e.message,true); }
+}
+
+/* ============================================================
+   BUILDER
+   ============================================================ */
+function fillCustomerSelect(selected){
+  const s=document.getElementById('b-customer'); s.innerHTML='<option value="">— select customer —</option>';
+  CUSTOMERS.forEach(c=>{ const o=document.createElement('option'); o.value=c.customer_id;
+    o.textContent=(c.company? c.company+' — ':'')+c.name+'  ('+c.customer_id+')'; s.appendChild(o); });
+  if(selected) s.value=selected;
+}
+function fillStatus(){
+  const s=document.getElementById('b-status'); s.innerHTML='';
+  STATUS_OPTS[MODE].forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o.charAt(0).toUpperCase()+o.slice(1); s.appendChild(op); });
+}
+const TERM_OPTS = {
+  quotation:['10% Advance Payment','20% Advance Payment','30% Advance Payment','40% Advance Payment','50% Advance Payment','Full Payment'],
+  invoice:['Balance Due','Full Payment']
+};
+function fillTerm(selected){
+  const s=document.getElementById('b-term'); s.innerHTML='';
+  const opts=[...TERM_OPTS[MODE]];
+  if(selected && !opts.includes(selected)) opts.unshift(selected);  // keep an existing custom term
+  opts.forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; s.appendChild(op); });
+  if(selected) s.value=selected;
+}
+function fillRefQt(selected){
+  const s=document.getElementById('b-refqt'); s.innerHTML='<option value="">— none —</option>';
+  // only show quotations belonging to the selected customer (plus the one already referenced)
+  const cid=document.getElementById('b-customer').value;
+  QUOTATIONS.filter(q=> !cid || q.customer_id===cid || q.quotation_id===selected).forEach(q=>{
+    const o=document.createElement('option'); o.value=q.quotation_id;
+    o.textContent=q.quotation_id+'  ('+(q.customer_company||q.customer_name||'')+')'; s.appendChild(o); });
+  if(selected) s.value=selected;
+}
+/* re-filter the ref-quotation list when the invoice's customer changes */
+function onCustomerChange(){
+  if(MODE==='invoice') fillRefQt('');
+}
+/* When a reference quotation is picked, pull its customer + line items into the invoice. */
+async function onRefQtChange(){
+  const qid=document.getElementById('b-refqt').value;
+  if(!qid) return;
+  const existing=collectItems();
+  if(existing.length && !await appConfirm({
+    title:'Fill from '+esc(qid)+'?',
+    body:'Fill the customer and line items from <b>'+esc(qid)+'</b>? This replaces the items currently in this invoice.',
+    confirmText:'Fill from quotation', danger:false
+  })) return;
+  try{
+    const q=await api('/api/quotations/'+qid);
+    if(q.customer_id) fillCustomerSelect(q.customer_id);
+    document.getElementById('itemRows').innerHTML='';
+    (q.items||[]).forEach(addItem);
+    if(!q.items||!q.items.length) addItem();
+    recalc();
+    flash('Filled items from '+qid);
+  }catch(e){ flash(e.message,true); }
+}
+async function enterBuilder(){
+  hideAll(); document.getElementById('view-builder').style.display=''; setActive(MODE==='quotation'?'nav-newq':'nav-newi');
+  document.body.classList.toggle('show-inv', MODE==='invoice');
+  document.querySelectorAll('.inv-only').forEach(e=>e.style.display = MODE==='invoice'? '':'none');
+  CUSTOMERS = await api('/api/customers');
+  QUOTATIONS = await api('/api/quotations');
+  fillStatus(); fillTerm(); fillRefQt();
+}
+async function newDoc(mode){
+  MODE=mode; EDIT_ID=null;
+  await enterBuilder();
+  document.getElementById('builderTitle').textContent = mode==='quotation'?'New Quotation':'New Invoice';
+  setTitle(mode==='quotation'?'New Quotation':'New Invoice','Fill the form, then save to the database');
+  fillCustomerSelect();
+  document.getElementById('b-date').value=todayISO();
+  document.getElementById('b-term').value = mode==='quotation'?'50% Advance Payment':'Balance Due';
+  document.getElementById('b-notes').value='';
+  document.getElementById('b-advance').value='';
+  document.getElementById('b-saved').textContent='';
+  document.getElementById('builderCustForm').innerHTML='';
+  document.getElementById('b-grandlbl').textContent = mode==='quotation'?'TOTAL':'BALANCE DUE';
+  document.getElementById('itemRows').innerHTML='';
+  addItem();
+  NEXT_ID=null;
+  try{ const ids=await api('/api/next-ids'); NEXT_ID=ids[mode];
+    document.getElementById('builderId').innerHTML='New '+(mode==='quotation'?'quotation':'invoice')+' — will be saved as <b>'+ids[mode]+'</b>';
+  }catch(e){}
+  recalc();
+}
+async function newDocFor(mode,cid){ await newDoc(mode); document.getElementById('b-customer').value=cid; }
+
+/* discount helpers (shared by editor, preview and printed doc) */
+function itemDiscAmt(it){
+  const g=(+it.qty||0)*(+it.unit_price||0);
+  return it.disc_type==='pct' ? g*(+it.disc||0)/100 : (+it.disc||0);
+}
+function itemNet(it){
+  return it.foc?0:Math.max((+it.qty||0)*(+it.unit_price||0)-itemDiscAmt(it),0);
+}
+
+/* line item rows */
+function addItem(it={}){
+  const foc=!!it.foc;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td class="iw-no"><span class="rno"></span></td>
+    <td><textarea class="i-desc" placeholder="PACKAGE A: LOGO DESIGN&#10;Main logo + 2 concept options&#10;Delivery date: ...">${esc(it.description||'')}</textarea></td>
+    <td class="iw-qty"><input class="c i-qty" value="${it.qty??1}"></td>
+    <td class="iw-uom">${uomSelect(it.uom)}</td>
+    <td class="iw-price"><input class="r i-price" value="${it.unit_price??''}" placeholder="0.00"></td>
+    <td class="iw-disc">
+        <div class="disc-wrap" ${foc?'style="display:none"':''}>
+          <input class="r i-disc" value="${it.disc??0}">
+          <select class="i-disctype">
+            <option value="amount"${it.disc_type==='pct'?'':' selected'}>RM</option>
+            <option value="pct"${it.disc_type==='pct'?' selected':''}>%</option>
+          </select>
+        </div>
+        <span class="foc i-foc">${foc?'☑ F.O.C.':'☐ FOC'}</span></td>
+    <td class="iw-total"><span class="i-total">0.00</span></td>
+    <td class="iw-act"><button class="rowx" onclick="this.closest('tr').remove();recalc()">✕</button></td>`;
+  tr.dataset.foc=foc;
+  document.getElementById('itemRows').appendChild(tr);
+  tr.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',recalc));
+  tr.querySelectorAll('select').forEach(el=>el.addEventListener('change',recalc));
+  tr.querySelector('.i-foc').addEventListener('click',function(){
+    const f=tr.dataset.foc!=='true'; tr.dataset.foc=f;
+    tr.querySelector('.disc-wrap').style.display=f?'none':'';
+    this.textContent=f?'☑ F.O.C.':'☐ FOC'; recalc();
+  });
+  recalc();
+}
+function recalc(){
+  let sub=0;
+  document.querySelectorAll('#itemRows tr').forEach((tr,i)=>{
+    tr.querySelector('.rno').textContent=i+1;
+    const foc=tr.dataset.foc==='true';
+    const qv=num(tr.querySelector('.i-qty').value), pv=num(tr.querySelector('.i-price').value);
+    const dv=num(tr.querySelector('.i-disc').value);
+    const dtype=tr.querySelector('.i-disctype').value;
+    const damt=dtype==='pct' ? qv*pv*dv/100 : dv;
+    const t = foc?0:Math.max(qv*pv-damt,0);
+    tr.querySelector('.i-total').textContent = foc?'0.00':t.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+    sub+=t;
+  });
+  document.getElementById('b-subtotal').textContent=money(sub);
+  let grand=sub;
+  if(MODE==='invoice'){
+    let adv=num(document.getElementById('b-advance').value);
+    if(!document.getElementById('b-advance').value) adv=+(sub*0.5).toFixed(2);
+    document.getElementById('b-adv2').textContent='('+money(adv)+')';
+    grand=+(sub-adv).toFixed(2);
+    document.getElementById('b-grandlbl').textContent='BALANCE DUE';
+  }else{
+    document.getElementById('b-grandlbl').textContent='TOTAL';
+  }
+  document.getElementById('b-grand').textContent=money(grand);
+  document.getElementById('b-words').textContent=ringgitWords(grand);
+}
+function collectItems(){
+  return [...document.querySelectorAll('#itemRows tr')].map(tr=>({
+    description:tr.querySelector('.i-desc').value,
+    qty:num(tr.querySelector('.i-qty').value),
+    uom:tr.querySelector('.i-uom').value,
+    unit_price:num(tr.querySelector('.i-price').value),
+    disc:num(tr.querySelector('.i-disc').value),
+    disc_type:tr.querySelector('.i-disctype').value,
+    foc:tr.dataset.foc==='true'
+  })).filter(it=>it.description.trim()||it.unit_price);
+}
+async function saveDoc(){
+  const cid=document.getElementById('b-customer').value;
+  if(!cid){ flash('Please select a customer',true); return; }
+  const items=collectItems();
+  if(!items.length){ flash('Add at least one line item',true); return; }
+  const payload={
+    customer_id:cid, date:document.getElementById('b-date').value,
+    term:document.getElementById('b-term').value, status:document.getElementById('b-status').value,
+    notes:document.getElementById('b-notes').value, items
+  };
+  const btn=document.getElementById('b-save'); btn.disabled=true;
+  try{
+    let doc;
+    if(MODE==='invoice'){
+      payload.quotation_id=document.getElementById('b-refqt').value||null;
+      const adv=document.getElementById('b-advance').value;
+      if(adv!=='') payload.advance_paid=num(adv);
+      doc = EDIT_ID ? await api('/api/invoices/'+EDIT_ID,'PUT',payload) : await api('/api/invoices','POST',payload);
+    }else{
+      doc = EDIT_ID ? await api('/api/quotations/'+EDIT_ID,'PUT',payload) : await api('/api/quotations','POST',payload);
+    }
+    const id=doc.quotation_id||doc.invoice_id;
+    flash('Saved '+id);
+    PREVIEW_MODE=false;
+    openDocData(MODE,doc);
+  }catch(e){ flash(e.message,true); }
+  finally{ btn.disabled=false; }
+}
+
+/* ============================================================
+   OPEN / PRINT
+   ============================================================ */
+async function openDoc(type,id){
+  PREVIEW_MODE=false;
+  try{ const doc=await api('/api/'+(type==='quotation'?'quotations':'invoices')+'/'+id); openDocData(type,doc); }
+  catch(e){ flash(e.message,true); }
+}
+function openDocData(type,doc){
+  if(!doc){ flash('Could not load that document.',true); showDocs(); return; }
+  CURRENT_DOC={type,doc};
+  hideAll(); document.getElementById('view-print').style.display='block'; setActive(null);
+  const docNo=(type==='quotation'?doc.quotation_id:doc.invoice_id);
+  document.title=pdfBaseName(type,doc);   // sets the Print / Save-PDF default file name
+  const pv=PREVIEW_MODE;
+  setTitle(pv?'Preview (unsaved)':'Preview', docNo);
+  const lockedMeta = (type==='quotation' && doc.status==='accepted');
+  document.getElementById('printMeta').textContent=(pv?'● Unsaved preview — ':'')+(type==='quotation'?'Quotation ':'Invoice ')+(docNo||'')+(lockedMeta?'  ·  Accepted & signed'+(doc.signed_at?' '+String(doc.signed_at).slice(0,10):''):'');
+  // toolbar: preview mode shows Save + Back to edit; saved docs show Edit + Back to documents
+  const locked = (type==='quotation' && doc.status==='accepted');
+  const isQuote = (type==='quotation');
+  const hasSigned = !!(doc.signed_at);
+  document.getElementById('pv-save').style.display=pv?'':'none';
+  document.getElementById('pv-backedit').style.display=pv?'':'none';
+  // Edit is hidden in preview, and hidden when a quotation is locked (accepted+signed)
+  document.getElementById('pv-edit').style.display=(pv||locked)?'none':'';
+  document.getElementById('pv-back').style.display=pv?'none':'';
+  // signed-copy controls only apply to saved quotations
+  document.getElementById('pv-upload').style.display=(!pv && isQuote && !locked)?'':'none';
+  // the signed copy is now shown directly on open, so the separate "View signed copy" button is not needed
+  document.getElementById('pv-viewsigned').style.display='none';
+  document.getElementById('pv-unsign').style.display=(!pv && isQuote && locked)?'':'none';
+  updatePayBtn(pv, type, doc);
+  // What to show in the paper area:
+  //  • a signed quotation -> the client-signed copy, directly
+  //  • a document with a finalized PDF on file -> that real PDF
+  //  • otherwise -> the generated document
+  if(!pv && isQuote && hasSigned){
+    document.getElementById('paperwrap').innerHTML='<div style="padding:60px 20px;text-align:center;color:var(--ink-soft)">Loading signed copy…</div>';
+    loadSignedInline(docNo, doc);
+  }else if(!pv && doc.has_pdf){
+    document.getElementById('paperwrap').innerHTML='<div style="padding:60px 20px;text-align:center;color:var(--ink-soft)">Loading final document…</div>';
+    loadFinalPdf(type, docNo, doc);
+  }else{
+    document.getElementById('paperwrap').innerHTML=buildDocHTML(type,doc);
+  }
+}
+async function loadSignedInline(qid, doc){
+  try{
+    const r=await api('/api/quotations/'+qid+'/signed');
+    if(!CURRENT_DOC || CURRENT_DOC.doc!==doc) return;   // user navigated away
+    const src=r.file||'';
+    const isPdf=/^data:application\/pdf/i.test(src);
+    let inner;
+    if(isPdf){
+      // a blob URL (not the raw data: URL) is needed for the PDF viewer to honour view=FitH
+      const url=URL.createObjectURL(await (await fetch(src)).blob());
+      if(!CURRENT_DOC || CURRENT_DOC.doc!==doc){ URL.revokeObjectURL(url); return; }
+      inner=`<iframe title="${esc(qid)} signed copy" src="${url}#toolbar=1&navpanes=0&view=FitH" style="width:100%;max-width:980px;height:calc(100vh - 150px);min-height:1000px;border:0;border-radius:14px;box-shadow:var(--shadow);background:#fff"></iframe>`;
+    }else{
+      inner=`<img alt="${esc(qid)} signed copy" src="${src}" style="width:100%;max-width:980px;border-radius:14px;box-shadow:var(--shadow);background:#fff">`;
+    }
+    document.getElementById('paperwrap').innerHTML=
+      `<div style="width:100%;display:flex;flex-direction:column;align-items:center">`+
+      `<div class="no-print" style="margin:0 0 12px;font-size:12px;color:var(--ink-soft)">Client-signed copy of ${esc(qid)} — accepted &amp; locked.</div>`+
+      inner+`</div>`;
+  }catch(e){
+    // fall back to the generated document if the signed copy can't be loaded
+    document.getElementById('paperwrap').innerHTML=buildDocHTML('quotation', doc);
+  }
+}
+async function loadFinalPdf(type, id, doc){
+  try{
+    const r=await api('/api/'+(type==='quotation'?'quotations':'invoices')+'/'+id+'/pdf');
+    const blob=await (await fetch(r.file)).blob();
+    const url=URL.createObjectURL(blob);
+    if(!CURRENT_DOC || (CURRENT_DOC.doc!==doc)) { URL.revokeObjectURL(url); return; } // user navigated away
+    document.getElementById('paperwrap').innerHTML=
+      `<iframe title="${esc(id)}" src="${url}#toolbar=1&navpanes=0&view=FitH" style="width:100%;max-width:980px;height:calc(100vh - 150px);min-height:1000px;border:0;border-radius:14px;box-shadow:var(--shadow);background:#fff"></iframe>`;
+  }catch(e){
+    // fall back to the generated document if the PDF can't be loaded
+    document.getElementById('paperwrap').innerHTML=buildDocHTML(type, doc);
+  }
+}
+
+/* ---------- preview the live form before saving ---------- */
+function buildFormDoc(){
+  const cid=document.getElementById('b-customer').value;
+  const cust=CUSTOMERS.find(c=>c.customer_id===cid)||{customer_id:cid};
+  const items=collectItems();
+  const sub=items.reduce((s,it)=>s+itemNet(it),0);
+  const docNo=EDIT_ID||NEXT_ID||'(new)';
+  const d={
+    customer_id:cid, customer:cust, items,
+    date:document.getElementById('b-date').value,
+    term:document.getElementById('b-term').value,
+    status:document.getElementById('b-status').value,
+    notes:document.getElementById('b-notes').value,
+    subtotal:+sub.toFixed(2)
+  };
+  if(MODE==='invoice'){
+    d.invoice_id=docNo;
+    d.quotation_id=document.getElementById('b-refqt').value||null;
+    let adv=num(document.getElementById('b-advance').value);
+    if(!document.getElementById('b-advance').value) adv=+(sub*0.5).toFixed(2);
+    d.advance_paid=adv; d.balance_due=+(sub-adv).toFixed(2);
+  }else{
+    d.quotation_id=docNo; d.total=+sub.toFixed(2);
+  }
+  return d;
+}
+function previewDoc(){
+  if(!document.getElementById('b-customer').value){ flash('Please select a customer',true); return; }
+  if(!collectItems().length){ flash('Add at least one line item',true); return; }
+  PREVIEW_MODE=true;
+  openDocData(MODE, buildFormDoc());
+}
+function backToBuilder(){
+  PREVIEW_MODE=false;
+  hideAll(); document.getElementById('view-builder').style.display='';
+  setActive(EDIT_ID? null : (MODE==='quotation'?'nav-newq':'nav-newi'));
+  setTitle(EDIT_ID?('Edit '+EDIT_ID):(MODE==='quotation'?'New Quotation':'New Invoice'),'Fill the form, then save to the database');
+}
+function editCurrent(){
+  if(!CURRENT_DOC) return showDocs();
+  const {type,doc}=CURRENT_DOC;
+  if(type==='quotation' && doc.status==='accepted'){
+    flash('This quotation is accepted & signed, so it is locked. Remove the signed copy to reopen it.',true);
+    return;
+  }
+  MODE=type; EDIT_ID = type==='invoice' ? doc.invoice_id : doc.quotation_id;
+  enterBuilder().then(()=>{
+    document.getElementById('builderTitle').textContent='Edit '+EDIT_ID;
+    setTitle('Edit '+EDIT_ID,'Update and save');
+    document.getElementById('builderId').innerHTML='Editing <b>'+EDIT_ID+'</b>';
+    fillCustomerSelect(doc.customer_id);
+    document.getElementById('b-date').value=doc.date||todayISO();
+    fillTerm(doc.term||'');
+    fillStatus(); document.getElementById('b-status').value=doc.status;
+    document.getElementById('b-notes').value=doc.notes||'';
+    document.getElementById('b-grandlbl').textContent=type==='quotation'?'TOTAL':'BALANCE DUE';
+    if(type==='invoice'){ fillRefQt(doc.quotation_id||''); document.getElementById('b-advance').value=doc.advance_paid??''; }
+    document.getElementById('itemRows').innerHTML='';
+    (doc.items||[]).forEach(addItem); if(!doc.items||!doc.items.length) addItem();
+    recalc();
+  });
+}
+async function editDoc(type,id){
+  try{
+    const doc=await api('/api/'+(type==='quotation'?'quotations':'invoices')+'/'+id);
+    CURRENT_DOC={type,doc};
+    editCurrent();
+  }catch(e){ flash(e.message,true); }
+}
+
+/* ---------- signed copy: upload / view / remove (client-signed quotation) ---------- */
+function pickSigned(){ document.getElementById('signedInput').click(); }
+async function doSignUpload(input){
+  const f=input.files && input.files[0]; input.value='';
+  if(!f) return;
+  if(!CURRENT_DOC || CURRENT_DOC.type!=='quotation'){ flash('Open a quotation first.',true); return; }
+  if(f.size > 8*1024*1024){ flash('That file is too large (max 8 MB). Please compress or re-scan it.',true); return; }
+  const qid=CURRENT_DOC.doc.quotation_id;
+  flash('Uploading signed copy…');
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    try{
+      const doc=await api('/api/quotations/'+qid+'/sign','POST',{file:reader.result, filename:f.name});
+      flash(qid+' accepted & locked');
+      openDocData('quotation',doc);
+    }catch(e){ flash(e.message,true); }
+  };
+  reader.onerror=()=>flash('Could not read that file.',true);
+  reader.readAsDataURL(f);
+}
+async function viewSigned(){
+  if(!CURRENT_DOC || CURRENT_DOC.type!=='quotation') return;
+  const qid=CURRENT_DOC.doc.quotation_id;
+  try{
+    const r=await api('/api/quotations/'+qid+'/signed');
+    const blob=await (await fetch(r.file)).blob();
+    const url=URL.createObjectURL(blob);
+    const w=window.open(url,'_blank');
+    if(!w) flash('Allow pop-ups to view the signed copy.',true);
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  }catch(e){ flash(e.message,true); }
+}
+async function removeSigned(){
+  if(!CURRENT_DOC || CURRENT_DOC.type!=='quotation') return;
+  const qid=CURRENT_DOC.doc.quotation_id;
+  if(!await appConfirm({
+    title:'Remove signed copy?',
+    body:'Remove the signed copy and reopen <b>'+esc(qid)+'</b> for editing? Its status will go back to <b>Pending</b>.',
+    confirmText:'Remove & reopen'
+  })) return;
+  if(!await appConfirm({
+    title:'Are you sure?',
+    body:'The uploaded signed copy of <b>'+esc(qid)+'</b> will be permanently deleted and cannot be recovered.',
+    confirmText:'Delete signed copy'
+  })) return;
+  try{
+    const doc=await api('/api/quotations/'+qid+'/sign','DELETE');
+    flash(qid+' reopened (pending)');
+    openDocData('quotation',doc);
+  }catch(e){ flash(e.message,true); }
+}
+
+/* ---------- payments ledger (money received + receipt proof) ---------- */
+/* total value of the open document: a quotation's total, or an invoice's subtotal */
+function docGrand(type,doc){ return type==='quotation' ? (+doc.total||0) : (+doc.subtotal||0); }
+/* money received, consistent with the Finance page (invoice = advance + logged balance payments) */
+function docReceived(type,doc){ return type==='quotation' ? quoteReceived(doc) : receivedOf(doc); }
+function updatePayBtn(pv,type,doc){
+  const btn=document.getElementById('pv-payments');
+  if(pv || !doc){ btn.style.display='none'; return; }   // only for saved documents
+  btn.style.display='';
+  const rec=docReceived(type,doc), grand=docGrand(type,doc);
+  const n=(doc.payments||[]).length;
+  btn.textContent='Payments · '+money(rec)+' / '+money(grand)+(n?' ('+n+')':'');
+}
+function openPayments(){
+  if(!CURRENT_DOC){ return; }
+  const {type,doc}=CURRENT_DOC;
+  document.getElementById('pay-amount').value='';
+  document.getElementById('pay-date').value=todayISO();
+  document.getElementById('pay-note').value='';
+  document.getElementById('pay-method').value='Bank transfer';
+  document.getElementById('pay-receipt').value='';
+  renderPayments();
+  document.getElementById('payModal').style.display='flex';
+}
+function closePayments(){ document.getElementById('payModal').style.display='none'; }
+function renderPayments(){
+  if(!CURRENT_DOC) return;
+  const {type,doc}=CURRENT_DOC;
+  const id=type==='quotation'?doc.quotation_id:doc.invoice_id;
+  const pays=doc.payments||[], grand=docGrand(type,doc);
+  const rec=docReceived(type,doc), out=Math.max(grand-rec,0);
+  const adv=+doc.advance_paid||0;
+  let hint='';
+  if(type==='invoice' && adv>0) hint='Includes '+money(adv)+' advance recorded on this invoice, plus the balance payments below.';
+  else if(!pays.length && rec>0) hint='Estimated from the agreed term — no receipt logged yet.';
+  document.getElementById('payTitle').textContent='Payments received — '+id;
+  document.getElementById('paySummary').innerHTML=
+    `<span><b style="color:var(--ok)">${money(rec)}</b> received</span>`+
+    `<span><b style="color:${out>0?'var(--accent)':'var(--ink-soft)'}">${money(out)}</b> outstanding</span>`+
+    `<span style="color:var(--ink-soft)">of ${money(grand)} total</span>`+
+    (hint?`<span style="flex-basis:100%;color:var(--ink-soft);font-size:12px">${hint}</span>`:'');
+  const tb=document.getElementById('payRows'); tb.innerHTML='';
+  if(!pays.length){ tb.innerHTML='<tr><td colspan="6" class="empty">No payments recorded yet.</td></tr>'; return; }
+  pays.forEach(p=>{
+    tb.insertAdjacentHTML('beforeend',`<tr>
+      <td>${fmtDate(p.paid_at)}</td>
+      <td>${esc(p.method||'')}</td>
+      <td>${esc(p.note||'')}</td>
+      <td class="money" style="color:var(--ok)">${money(p.amount)}</td>
+      <td>${p.has_receipt?`<button class="btn ghost sm" onclick="viewReceipt(${p.id})">View</button>`:'<span class="muted">—</span>'}</td>
+      <td style="text-align:right"><button class="btn danger sm" title="Delete payment" onclick="delPayment(${p.id})">✕</button></td></tr>`);
+  });
+}
+async function submitPayment(){
+  if(!CURRENT_DOC) return;
+  const {type,doc}=CURRENT_DOC;
+  const id=type==='quotation'?doc.quotation_id:doc.invoice_id;
+  const amount=num(document.getElementById('pay-amount').value);
+  if(!(amount>0)){ flash('Enter a payment amount greater than 0.',true); return; }
+  const payload={
+    amount,
+    paid_at:document.getElementById('pay-date').value||todayISO(),
+    method:document.getElementById('pay-method').value||'',
+    note:document.getElementById('pay-note').value||''
+  };
+  const f=document.getElementById('pay-receipt').files[0];
+  if(f && f.size>8*1024*1024){ flash('That receipt is too large (max 8 MB).',true); return; }
+  const send=async()=>{
+    try{
+      const r=await api('/api/'+(type==='quotation'?'quotations':'invoices')+'/'+id+'/payments','POST',payload);
+      doc.payments=r.payments; doc.paid=r.paid; if(r.status) doc.status=r.status;
+      flash('Payment of '+money(amount)+' recorded'+(r.status?' · invoice '+r.status:''));
+      document.getElementById('pay-amount').value='';
+      document.getElementById('pay-note').value='';
+      document.getElementById('pay-receipt').value='';
+      renderPayments(); updatePayBtn(false,type,doc);
+    }catch(e){ flash(e.message,true); }
+  };
+  if(f){
+    const reader=new FileReader();
+    reader.onload=()=>{ payload.receipt=reader.result; payload.receipt_name=f.name; send(); };
+    reader.onerror=()=>flash('Could not read that receipt file.',true);
+    reader.readAsDataURL(f);
+  }else{ send(); }
+}
+async function delPayment(pid){
+  if(!CURRENT_DOC) return;
+  const {type,doc}=CURRENT_DOC;
+  if(!await appConfirm({
+    title:'Delete this payment?',
+    body:'This removes the payment record and its receipt. The money will no longer count as received.',
+    confirmText:'Delete payment'
+  })) return;
+  try{
+    const r=await api('/api/payments/'+pid,'DELETE');
+    doc.payments=r.payments; doc.paid=r.paid; if(r.status) doc.status=r.status;
+    flash('Payment removed'+(r.status?' · invoice '+r.status:''));
+    renderPayments(); updatePayBtn(false,type,doc);
+  }catch(e){ flash(e.message,true); }
+}
+async function viewReceipt(pid){
+  try{
+    const r=await api('/api/payments/'+pid+'/receipt');
+    const blob=await (await fetch(r.file)).blob();
+    const url=URL.createObjectURL(blob);
+    const w=window.open(url,'_blank');
+    if(!w) flash('Allow pop-ups to view the receipt.',true);
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  }catch(e){ flash(e.message,true); }
+}
+
+/* ---------- delete with two-step confirmation ---------- */
+let PENDING_DEL=null;
+function delDoc(type,id){
+  const h=HISTORY.find(x=>x.type===type&&x.id===id);
+  PENDING_DEL={type,id};
+  const label=(type==='quotation'?'quotation':'invoice');
+  document.getElementById('delInfo').innerHTML =
+    `<b>${esc(id)}</b> (${label})${h?' — '+esc(h.customer)+', '+money(h.amount):''}`;
+  const chk=document.getElementById('delConfirmChk'), btn=document.getElementById('delConfirmBtn');
+  chk.checked=false; btn.disabled=true;
+  document.getElementById('delModal').style.display='flex';
+}
+function closeDel(){ document.getElementById('delModal').style.display='none'; PENDING_DEL=null; }
+
+/* Promise-based in-app confirm — replaces the native confirm() popup. */
+let _confirmResolver=null;
+function appConfirm({title='Please confirm', body='', confirmText='Confirm', danger=true}={}){
+  return new Promise(resolve=>{
+    _confirmResolver=resolve;
+    document.getElementById('confirmTitle').textContent=title;
+    document.getElementById('confirmBody').innerHTML=body;
+    const ok=document.getElementById('confirmOkBtn');
+    ok.textContent=confirmText;
+    ok.className='btn '+(danger?'danger-solid':'');
+    document.getElementById('confirmModal').style.display='flex';
+  });
+}
+function confirmResolve(v){
+  document.getElementById('confirmModal').style.display='none';
+  const r=_confirmResolver; _confirmResolver=null;
+  if(r) r(v);
+}
+async function confirmDelete(){
+  if(!PENDING_DEL) return;
+  const {type,id}=PENDING_DEL;
+  try{
+    await api('/api/'+(type==='quotation'?'quotations':'invoices')+'/'+id,'DELETE');
+    flash('Deleted '+id);
+    closeDel(); loadDocs();
+  }catch(e){ flash(e.message,true); closeDel(); }
+}
+
+/* ---------- UBOLD logo mark (SVG, matches the reference) ---------- */
+const ICON = `<img src="doc-logo.png" alt="UBOLD">`;
+// The signature is the logged-in user's saved signature; falls back to signature.png.
+function sigBlock(){
+  const sig = (CURRENT_USER && CURRENT_USER.signature)
+    ? `<img class="sig" src="${CURRENT_USER.signature}" alt="signature">`
+    : `<img class="sig" src="signature.png" alt="" onerror="this.style.display='none'">`;
+  return sig + `<img class="stamp" src="stamp.png" alt="" onerror="this.style.display='none'">`;
+}
+
+/* ---------- document template (matches the reference PDFs) ---------- */
+function buildDocHTML(type,doc){
+  const isInv=type==='invoice';
+  const c=doc.customer||{};
+  const items=doc.items||[];
+  const sub=items.reduce((s,it)=>s+itemNet(it),0);
+  const grand = isInv? (doc.balance_due) : (doc.total||sub);
+  const docNo = isInv? doc.invoice_id : doc.quotation_id;
+  const cParts=(c.company||'').split(/\s{2,}/);
+  const coMain=cParts[0]||'', coCn=cParts.slice(1).join(' ');
+  const n2=(x)=>Number(x||0).toFixed(2);
+
+  const rows = items.map((it,i)=>{
+    const foc=!!it.foc;
+    const t=itemNet(it);
+    const discDisp = foc ? 'F.O.C.'
+      : (it.disc_type==='pct' ? trimNum(it.disc)+'%' : trimNum(it.disc));
+    const lines=(it.description||'').split('\n');
+    const ttl=lines[0]||'', subl=lines.slice(1).join('\n');
+    return `<tr>
+      <td class="dc-no">${i+1}</td>
+      <td class="dc-desc"><span class="t">${esc(ttl)}</span>${subl?`<div class="s">${esc(subl)}</div>`:''}</td>
+      <td class="dc-c">${trimNum(it.qty)}</td>
+      <td class="dc-c">${esc(it.uom||'')}</td>
+      <td class="dc-r">${it.unit_price?trimNum(it.unit_price):'F.O.C.'}</td>
+      <td class="dc-r ${foc?'dc-foc':''}">${discDisp}</td>
+      <td class="dc-r">${n2(t)}</td>
+    </tr>`;
+  }).join('');
+
+  const foot = `<div class="d-foot"><div class="d-cbar">
+      <div>${COMPANY.email}<br>${COMPANY.web}</div>
+      <div>${COMPANY.phone}<br>${COMPANY.ig}</div>
+      <div class="cmid">${COMPANY.name}</div>
+      <div style="text-align:right">${COMPANY.reg}<br>${COMPANY.reg2}</div>
+    </div></div>`;
+
+  const metaRow=(k,v)=>`<tr><td class="k">${k}</td><td>:</td><td class="v">${esc(v)}</td></tr>`;
+  const metaP1 = isInv
+    ? metaRow('Invoice No',docNo)+metaRow('Customer ID',doc.customer_id)+metaRow('Date',fmtDate(doc.date))+metaRow('Page','1 of 2')
+      +(doc.quotation_id?metaRow('Ref. Quotation',doc.quotation_id):'')+metaRow('Term',doc.term||'')
+    : metaRow('Quotation No',docNo)+metaRow('Customer ID',doc.customer_id)+metaRow('Date',fmtDate(doc.date))+metaRow('Page','1 of 2')+metaRow('Term',doc.term||'');
+  const metaP2 = (isInv?metaRow('Invoice No',docNo):metaRow('Quotation No',docNo))+metaRow('Customer ID',doc.customer_id)+metaRow('Date',fmtDate(doc.date))+metaRow('Page','2 of 2')+(isInv?'':metaRow('Term',doc.term||''));
+
+  const intro = isInv
+    ? `<div class="greet">Dear ${esc(c.name||'')}</div><p>It's been a pleasure bringing your vision to life!</p><p>Our project is now wrapped up and delivered, and we couldn't be happier with how it turned out. Please find the final invoice for the remaining balance below and if you've already sent it through, please disregard this note with our thanks!</p>`
+    : `<div class="greet">Dear ${esc(c.name||'')}</div><p>Thank you for your interest in our service.</p><p>We are pleased to provide you with the following quotation based on your requirements. Please find the details below:</p>`;
+
+  const advPct = sub>0? Math.round((doc.advance_paid||0)/sub*100):50;
+  const qtTotal = doc.total||sub;
+  const qtAdvPct = advPctOf(doc.term);
+  const qtAdvAmt = +(qtTotal*qtAdvPct/100).toFixed(2);
+  const tncPct = isInv ? advPct : qtAdvPct;
+  const totals = isInv
+    ? `<div style="display:flex;justify-content:flex-end;margin-top:14px"><div class="d-tot">
+         <div class="tr"><span>Subtotal</span><span class="v">${n2(sub)}</span></div>
+         <div class="tr"><span>Less: Advance Paid (${advPct}%)</span><span class="v">(${n2(doc.advance_paid)})</span></div>
+         <div class="tr bold"><span>Balance Due</span><span class="v">${n2(doc.balance_due)}</span></div>
+       </div></div>
+       <div class="d-totwrap"><div class="d-words">${ringgitWords(grand)}</div>
+         <div class="d-totbox">Balance Due&nbsp;&nbsp;&nbsp;MYR ${n2(doc.balance_due)}</div></div>`
+    : `<div class="d-totwrap"><div class="d-words">${ringgitWords(grand)}</div>
+         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+           <div class="d-totline"><span class="lbl">Total</span><span class="d-totbox">${n2(qtTotal)}</span></div>
+           <div class="d-advline">${qtAdvPct>=100
+             ? `Full Payment Due on Acceptance&nbsp;&nbsp;<b>MYR ${n2(qtTotal)}</b>`
+             : `Advance Payment Due (${qtAdvPct}%)&nbsp;&nbsp;<b>MYR ${n2(qtAdvAmt)}</b>`}</div>
+         </div></div>`;
+
+  const tncTwo = `
+      <div class="d-two"><div class="lab">Terms &amp; Conditions</div><div class="body">${esc(termsText(tncPct))}</div></div>
+      <div class="d-two"><div class="lab">Copyright</div><div class="body">${esc(COPYRIGHT)}</div></div>`;
+
+  // ---- PAGE 1 ----
+  const page1 = `
+  <div class="page">
+    <div class="d-head"><div class="d-logo">${ICON}</div><table class="meta">${metaP1}</table></div>
+    <div class="d-band">
+      <div class="d-client">
+        <div class="co">${esc(coMain)}${coCn?` <span class="cn">${esc(coCn)}</span>`:''}</div>
+        <div class="nm">${esc(c.name||'')}</div>
+        ${c.nric_tin?`<div class="ln">NRIC/TIN: ${esc(c.nric_tin)}</div>`:''}
+        ${c.phone?`<div class="ln">${esc(c.phone)}</div>`:''}
+        ${c.address?`<div class="ln">${esc(c.address)}</div>`:''}
+      </div>
+      <div class="d-title">${isInv?'INVOICE':'QUOTATION'}</div>
+    </div>
+    <hr class="d-hr">
+    <div class="d-intro">${intro}</div>
+    <table class="ditems">
+      <thead><tr><th>Item</th><th>Description</th><th class="c">Qty</th><th class="c">UOM</th>
+        <th class="r">U/PRICE<small>MYR</small></th><th class="r">Disc</th><th class="r">Total<small>MYR</small></th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:#999;padding:16px">No items</td></tr>'}</tbody>
+    </table>
+    ${totals}
+    ${isInv?'':tncTwo}
+    ${foot}
+  </div>`;
+
+  // ---- PAGE 2 ----
+  let page2;
+  if(isInv){
+    page2 = `
+  <div class="page">
+    <div class="d-pg2line">Invoice No: ${esc(docNo)}  |  Customer ID ${esc(doc.customer_id)}  |  Date: ${fmtDate(doc.date)}  |  Page: 2 of 2</div>
+    ${tncTwo}
+    <div class="d-two"><div class="lab">Payment Note</div><div class="body">
+      All payment should be crossed and made payable to —<br>
+      Bank: <b>${COMPANY.bank}</b> &nbsp;|&nbsp; Account holder: <b>${COMPANY.holder}</b> &nbsp;|&nbsp; Account number: <b>${COMPANY.acc}</b><br>
+      Please share the bankslip once the payment is made
+    </div></div>
+    <div class="d-sign" style="justify-content:center;margin-top:60px">
+      <div class="sig-col" style="flex:0 0 320px;text-align:center">
+        <div class="sig-cap">${COMPANY.name}</div>
+        <div class="sig-area" style="margin:6px auto 0;display:inline-block;width:260px">${sigBlock()}</div>
+        <div class="sig-cap" style="font-style:italic">Authorised Signature<br>&amp; Company Stamp</div>
+      </div>
+    </div>
+    <div class="d-bar barserif">Thank you for your business!<br>We'd love the chance to work with you again soon!</div>
+    ${foot}
+  </div>`;
+  } else {
+    page2 = `
+  <div class="page">
+    <div class="d-head"><div></div><table class="meta">${metaP2}</table></div>
+    <div class="note-wrap">
+      <div class="nh">Note:</div>
+      <div class="note-list"><span class="rn">i.</span><span>All payment should be crossed and made payable to :<br>
+        Bank: <b>${COMPANY.bank}</b><br>Account holder: <b>${COMPANY.holder}</b><br>Account number: <b>${COMPANY.acc}</b></span></div>
+      <div class="note-list"><span class="rn">ii.</span><span>Please share the bankslip once the payment made.</span></div>
+    </div>
+    <div class="d-sign">
+      <div class="sig-col">
+        <div class="sig-cap">${COMPANY.name}</div>
+        <div class="sig-area">${sigBlock()}</div>
+        <div class="sig-line"></div>
+        <div class="sig-cap" style="font-style:italic;margin-top:5px">Authorised Signature<br>&amp; Company Stamp</div>
+      </div>
+      <div class="sig-col">
+        <div class="confirm-r">We confirm the order by accepting the terms<br>&amp; conditions stated above.</div>
+        <div style="height:46px"></div>
+        <div class="sig-line" style="margin-left:auto"></div>
+        <div style="text-align:center;margin-top:5px"><span class="sig-italic">Signature &amp; Chop</span></div>
+        <div class="sans" style="font-size:11px;color:var(--dt);margin-top:16px">Person incharge:<br>Date:</div>
+      </div>
+    </div>
+    <div class="ack">Please acknowledge and return this quotation</div>
+    <div class="d-bar barsans">Thank you for your business. We appreciate the opportunity to work with you&nbsp; :D</div>
+    ${foot}
+  </div>`;
+  }
+  return page1 + page2;
+}
+function trimNum(n){ n=Number(n||0); return Number.isInteger(n)? String(n) : n.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+/* ============================================================
+   AUTH + ACCOUNT
+   ============================================================ */
+let SIG_MODE='draw';
+let PF_SIG=null;      // pending signature (null=unchanged, ''=cleared, dataURL=new)
+let PF_AVATAR=null;   // pending avatar  (same convention)
+
+function val(id){ return (document.getElementById(id).value||'').trim(); }
+function initials(name){ return ((name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('')||'?').toUpperCase(); }
+
+/* password show/hide toggle */
+const EYE='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function togglePw(btn,id){ const inp=document.getElementById(id); const show=inp.type==='password'; inp.type=show?'text':'password'; btn.innerHTML=show?EYE_OFF:EYE; btn.setAttribute('aria-label', show?'Hide password':'Show password'); }
+document.querySelectorAll('.pweye').forEach(b=>b.innerHTML=EYE);
+
+function showAuth(){ document.getElementById('authScreen').classList.add('show'); document.getElementById('userMenu').style.display='none'; }
+function hideAuth(){ document.getElementById('authScreen').classList.remove('show'); document.getElementById('userMenu').style.display=''; }
+function authTab(which){
+  ['login','register','forgot'].forEach(f=>{ const el=document.getElementById('form-'+f); if(el) el.classList.toggle('active', f===which); });
+  document.getElementById('tab-login').classList.toggle('active', which!=='register');
+  document.getElementById('tab-register').classList.toggle('active', which==='register');
+  authMsg('');
+}
+function authMsg(msg, ok){
+  document.getElementById('authErr').style.display = (msg&&!ok)?'block':'none';
+  document.getElementById('authOk').style.display  = (msg&&ok)?'block':'none';
+  if(msg){ document.getElementById(ok?'authOk':'authErr').textContent=msg; }
+}
+async function doLogin(e){ e.preventDefault();
+  try{ onLoggedIn(await api('/api/auth/login','POST',{email:val('li-email'),password:document.getElementById('li-pw').value}),
+                  document.getElementById('li-remember').checked); }
+  catch(err){ authMsg(err.message); }
+}
+async function doRegister(e){ e.preventDefault();
+  const pw=document.getElementById('re-pw').value, pw2=document.getElementById('re-pw2').value;
+  if(pw.length<6){ authMsg('Password must be at least 6 characters.'); return; }
+  if(pw!==pw2){ authMsg('The two passwords do not match.'); return; }
+  try{
+    const r=await api('/api/auth/register','POST',{name:val('re-name'),email:val('re-email'),password:pw});
+    if(r.token){ onLoggedIn(r); }
+    else if(r.pending){ authTab('login'); document.getElementById('li-email').value=val('re-email'); authMsg('Account created! An owner must approve it before you can sign in.', true); }
+  }catch(err){ authMsg(err.message); }
+}
+async function doReset(e){ e.preventDefault();
+  try{ await api('/api/auth/reset','POST',{email:val('fg-email'),password:document.getElementById('fg-pw').value});
+    authTab('login'); document.getElementById('li-email').value=val('fg-email'); authMsg('Password updated — you can sign in now.', true);
+  }catch(err){ authMsg(err.message); }
+}
+function onLoggedIn(r, remember=true){
+  TOKEN=r.token; storeToken(TOKEN, remember); CURRENT_USER=r.user;
+  hideAuth(); renderUserMenu(); showDocs();
+}
+function logoutToAuth(){ TOKEN=''; CURRENT_USER=null; clearToken(); closeUserMenu(); showAuth(); }
+function doLogout(){ logoutToAuth(); }
+
+/* ---------- avatar / user menu ---------- */
+function renderUserMenu(){
+  if(!CURRENT_USER) return; const u=CURRENT_USER;
+  const first=(u.name||'').trim().split(/\s+/)[0]||'there';
+  const eb=document.getElementById('pageEyebrow'); if(eb) eb.textContent='Hey, '+first+'!';
+  document.getElementById('avatarBtn').innerHTML = u.avatar ? `<img src="${u.avatar}" alt="">` : initials(u.name);
+  document.getElementById('um-name').textContent=u.name;
+  document.getElementById('um-email').textContent=u.email;
+  document.getElementById('um-role').textContent=u.role;
+  document.getElementById('um-team').style.display = u.role==='owner' ? '' : 'none';
+}
+function toggleUserMenu(e){ e.stopPropagation(); document.getElementById('userMenu').classList.toggle('open'); }
+function closeUserMenu(){ document.getElementById('userMenu').classList.remove('open'); }
+document.addEventListener('click', closeUserMenu);
+
+/* ---------- profile ---------- */
+function showProfile(){
+  closeUserMenu(); hideAll(); setActive(null);
+  document.getElementById('view-profile').style.display='';
+  setTitle('My profile','Your details, signature & avatar');
+  PF_SIG=null; PF_AVATAR=null;
+  const u=CURRENT_USER;
+  document.getElementById('pf-name').value=u.name||'';
+  document.getElementById('pf-email').value=u.email||'';
+  document.getElementById('pf-heading').textContent=u.name||'My profile';
+  document.getElementById('pf-sub').textContent=(u.email||'')+'  ·  '+u.role;
+  document.getElementById('sigFileName').textContent='';
+  document.getElementById('sig-upload-preview').style.display='none';
+  ['cp-current','cp-new','cp-new2'].forEach(i=>{ const el=document.getElementById(i); if(el) el.value=''; });
+  renderPfAvatar(u.avatar);
+  // one signature per person: if one is saved, show it with Delete and hide the draw/upload tools.
+  const hasSig=!!u.signature;
+  const cur=document.getElementById('sig-current');
+  document.getElementById('sig-tools').style.display = hasSig ? 'none' : '';
+  if(hasSig){ document.getElementById('sig-current-img').src=u.signature; cur.style.display=''; }
+  else { cur.style.display='none'; sigMode('draw'); setupSigPad(); clearSigPad(); }
+}
+function renderPfAvatar(src){ document.getElementById('pf-avatar').innerHTML = src ? `<img src="${src}" alt="">` : initials(CURRENT_USER.name); }
+function pickAvatar(){ document.getElementById('avatarInput').click(); }
+function onAvatarFile(input){ const f=input.files&&input.files[0]; input.value=''; if(!f) return;
+  if(f.size>4*1024*1024){ flash('Image too large (max 4 MB).',true); return; }
+  const rd=new FileReader(); rd.onload=()=>{ PF_AVATAR=rd.result; renderPfAvatar(rd.result); }; rd.readAsDataURL(f); }
+function clearAvatar(){ PF_AVATAR=''; renderPfAvatar(''); }
+
+function sigMode(m){ SIG_MODE=m;
+  document.querySelectorAll('#sigMode button').forEach(b=>b.classList.toggle('active', b.dataset.m===m));
+  document.getElementById('sig-draw').style.display = m==='draw'?'':'none';
+  document.getElementById('sig-upload').style.display = m==='upload'?'':'none';
+}
+function pickSigFile(){ document.getElementById('sigFileInput').click(); }
+function onSigFile(input){ const f=input.files&&input.files[0]; input.value=''; if(!f) return;
+  if(f.size>4*1024*1024){ flash('Image too large (max 4 MB).',true); return; }
+  const rd=new FileReader(); rd.onload=()=>{ PF_SIG=rd.result;
+    document.getElementById('sigFileName').textContent=f.name+'  ✓  (click Save profile)';
+    document.getElementById('sig-upload-img').src=rd.result;
+    document.getElementById('sig-upload-preview').style.display=''; };
+  rd.readAsDataURL(f); }
+
+/* signature drawing pad */
+let sigCtx=null, sigDrawing=false, sigHasInk=false, sigPadBound=false;
+function setupSigPad(){
+  const cv=document.getElementById('sigPad');
+  const w=cv.clientWidth||600;
+  cv.width=w*2; cv.height=180*2;
+  sigCtx=cv.getContext('2d'); sigCtx.scale(2,2);
+  sigCtx.lineWidth=2.2; sigCtx.lineCap='round'; sigCtx.lineJoin='round'; sigCtx.strokeStyle='#17233b';
+  sigHasInk=false;
+  if(sigPadBound) return; sigPadBound=true;
+  const pos=(e)=>{ const r=cv.getBoundingClientRect(); const p=e.touches?e.touches[0]:e; return [p.clientX-r.left, p.clientY-r.top]; };
+  const start=(e)=>{ e.preventDefault(); sigDrawing=true; const [x,y]=pos(e); sigCtx.beginPath(); sigCtx.moveTo(x,y); };
+  const move=(e)=>{ if(!sigDrawing) return; e.preventDefault(); const [x,y]=pos(e); sigCtx.lineTo(x,y); sigCtx.stroke(); sigHasInk=true; };
+  const end=()=>{ if(sigDrawing&&sigHasInk){ PF_SIG=cv.toDataURL('image/png'); } sigDrawing=false; };
+  cv.addEventListener('mousedown',start); cv.addEventListener('mousemove',move); window.addEventListener('mouseup',end);
+  cv.addEventListener('touchstart',start,{passive:false}); cv.addEventListener('touchmove',move,{passive:false}); cv.addEventListener('touchend',end);
+}
+function clearSigPad(){ const cv=document.getElementById('sigPad'); if(sigCtx) sigCtx.clearRect(0,0,cv.width,cv.height); sigHasInk=false; if(SIG_MODE==='draw') PF_SIG=null; }
+
+async function saveProfile(){
+  const payload={ name: val('pf-name'), email: val('pf-email') };
+  if(!payload.name){ flash('Please enter your name.',true); return; }
+  if(!payload.email){ flash('Please enter your email.',true); return; }
+  if(PF_AVATAR!==null) payload.avatar = PF_AVATAR;
+  if(SIG_MODE==='draw' && sigHasInk) PF_SIG = document.getElementById('sigPad').toDataURL('image/png');
+  if(PF_SIG!==null) payload.signature = PF_SIG;
+  const btn=document.getElementById('pf-save'); btn.disabled=true;
+  try{ CURRENT_USER=await api('/api/auth/me','PUT',payload); renderUserMenu(); flash('Profile saved'); showProfile(); }
+  catch(e){ flash(e.message,true); } finally{ btn.disabled=false; }
+}
+async function deleteSignature(){
+  if(!await appConfirm({
+    title:'Delete signature?',
+    body:'Delete your saved signature? You can draw or upload a new one afterwards.',
+    confirmText:'Delete signature'
+  })) return;
+  try{ CURRENT_USER=await api('/api/auth/me','PUT',{signature:''}); flash('Signature deleted'); showProfile(); }
+  catch(e){ flash(e.message,true); }
+}
+async function changePassword(){
+  const cur=document.getElementById('cp-current').value;
+  const nw=document.getElementById('cp-new').value, nw2=document.getElementById('cp-new2').value;
+  if(!cur){ flash('Enter your current password.',true); return; }
+  if(nw.length<6){ flash('New password must be at least 6 characters.',true); return; }
+  if(nw!==nw2){ flash('The new passwords do not match.',true); return; }
+  const btn=document.getElementById('cp-save'); btn.disabled=true;
+  try{
+    await api('/api/auth/password','PUT',{current_password:cur,new_password:nw});
+    flash('Password updated');
+    ['cp-current','cp-new','cp-new2'].forEach(i=>document.getElementById(i).value='');
+  }catch(e){ flash(e.message,true); } finally{ btn.disabled=false; }
+}
+
+/* ---------- team (owner) ---------- */
+async function showTeam(){
+  closeUserMenu(); hideAll(); setActive(null);
+  document.getElementById('view-team').style.display='';
+  setTitle('Team','Approve new sign-ups & manage access');
+  document.getElementById('addMemberWrap').style.display='none';
+  await loadTeam();
+}
+async function loadTeam(){
+  try{
+    const users=await api('/api/users');
+    const tb=document.getElementById('teamRows'); tb.innerHTML='';
+    if(!users.length){ tb.innerHTML='<tr><td colspan="5" class="empty">No members yet.</td></tr>'; return; }
+    users.forEach(u=>{
+      const isMe=u.user_id===CURRENT_USER.user_id, acts=[];
+      if(u.status==='pending') acts.push(`<button class="btn sm" onclick="approveUser('${u.user_id}')">Approve</button>`);
+      if(u.status==='active'&&u.role!=='owner') acts.push(`<button class="btn sec sm" onclick="promoteUser('${u.user_id}')">Make owner</button>`);
+      if(!isMe) acts.push(`<button class="btn danger sm" onclick="removeUser('${u.user_id}','${esc(u.name).replace(/'/g,"\\'")}')" title="Remove">✕</button>`);
+      tb.insertAdjacentHTML('beforeend', `<tr>
+        <td><b>${esc(u.name)}</b>${isMe?' <span class="muted">(you)</span>':''}</td>
+        <td class="muted">${esc(u.email)}</td>
+        <td><span class="rolechip">${esc(u.role)}</span></td>
+        <td><span class="tag ${u.status==='active'?'accepted':'pending'}">${esc(u.status)}</span></td>
+        <td><div class="row-actions" style="justify-content:flex-end">${acts.join('')||'<span class="muted">—</span>'}</div></td></tr>`);
+    });
+  }catch(e){ flash(e.message,true); }
+}
+async function approveUser(id){ try{ await api('/api/users/'+id,'PUT',{status:'active'}); flash('Member approved'); loadTeam(); }catch(e){ flash(e.message,true);} }
+async function promoteUser(id){ if(!await appConfirm({title:'Make owner?', body:'Make this member an <b>owner</b>? Owners can manage the team.', confirmText:'Make owner', danger:false})) return; try{ await api('/api/users/'+id,'PUT',{role:'owner'}); flash('Promoted to owner'); loadTeam(); }catch(e){ flash(e.message,true);} }
+async function removeUser(id,name){ if(!await appConfirm({title:'Remove member?', body:'Remove <b>'+esc(name)+'</b> from the workspace? They lose access immediately.', confirmText:'Remove member'})) return; try{ await api('/api/users/'+id,'DELETE'); flash('Member removed'); loadTeam(); }catch(e){ flash(e.message,true);} }
+function toggleAddMember(){ const w=document.getElementById('addMemberWrap'); w.style.display = w.style.display==='none'?'':'none'; }
+async function addMember(){
+  const name=val('am-name'), email=val('am-email'), pw=document.getElementById('am-pw').value;
+  if(!name||!email||(pw||'').length<6){ flash('Name, email and a 6+ character password are required.',true); return; }
+  try{ await api('/api/users','POST',{name,email,password:pw}); flash('Member added');
+    ['am-name','am-email','am-pw'].forEach(i=>document.getElementById(i).value=''); toggleAddMember(); loadTeam();
+  }catch(e){ flash(e.message,true); }
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+async function boot(){
+  showAuth();                      // cover the app until auth is known
+  if(TOKEN){
+    try{ CURRENT_USER=await api('/api/auth/me'); hideAuth(); renderUserMenu(); showDocs(); return; }
+    catch(e){ TOKEN=''; clearToken(); }
+  }
+}
+boot();
+</script>
+</body>
+</html>
