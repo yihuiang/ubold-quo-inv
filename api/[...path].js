@@ -66,7 +66,20 @@ async function handleAuth(req, res, path, method, body) {
 export default async function handler(req, res) {
   try {
     await ensureSchema();
-    const seg = Array.isArray(req.query.path) ? req.query.path : [req.query.path].filter(Boolean);
+    // Resolve the path segments robustly. Prefer Vercel's catch-all param, but
+    // fall back to parsing the URL directly so multi-segment routes (e.g.
+    // /api/auth/login, /api/quotations/QT-003) work regardless of how the
+    // platform routes the request to this function.
+    let seg;
+    if (Array.isArray(req.query.path)) {
+      seg = req.query.path.filter(Boolean);
+    } else if (typeof req.query.path === 'string' && req.query.path) {
+      seg = req.query.path.split('/').filter(Boolean);
+    } else {
+      const rawPath = (req.url || '').split('?')[0].replace(/^\/+/, '');
+      seg = rawPath.split('/').filter(Boolean);
+      if (seg[0] === 'api') seg = seg.slice(1);
+    }
     const method = req.method;
     const body = parseBody(req);
     const fullPath = seg.join('/');
