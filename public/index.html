@@ -292,6 +292,59 @@
   }
   @media(max-width:1000px){.grid2,.grid3{grid-template-columns:1fr;}.page{width:100%;min-height:auto;padding:16px;}}
 
+  /* ============ Responsive: tablet & phone ============ */
+  .paymodal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .menu-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 auto;
+    border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);box-shadow:var(--shadow-sm);padding:0;}
+  .menu-toggle svg{width:20px;height:20px;}
+  .side-backdrop{display:none;position:fixed;inset:0;background:rgba(20,22,26,.42);z-index:149;}
+
+  /* Tablet */
+  @media(max-width:1024px){
+    .topbar{padding:22px 20px 14px;}
+    .content{padding:14px 20px 64px;}
+    .stats{grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;}
+  }
+
+  /* Phone / small tablet: off-canvas sidebar */
+  @media(max-width:860px){
+    body{display:block;}
+    .menu-toggle{display:inline-flex;}
+    .side{position:fixed;top:0;left:0;height:100vh;width:252px;z-index:150;overflow-y:auto;
+      transform:translateX(-100%);transition:transform .22s ease;
+      background:rgba(255,255,255,.97);box-shadow:0 10px 40px rgba(20,30,70,.22);}
+    .side.open{transform:translateX(0);}
+    .side-backdrop.show{display:block;}
+    .main{height:auto;overflow:visible;width:100%;}
+    .topbar{padding:14px 16px 10px;gap:10px;flex-wrap:wrap;align-items:center;}
+    .topbar h1{font-size:23px;}
+    .topbar .sub{margin-top:2px;}
+    .topbar .eyebrow{font-size:12.5px;}
+    #topActions{order:4;flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;}
+    #topActions .btn{flex:1 1 auto;justify-content:center;}
+    .content{padding:12px 16px 72px;}
+    .card{padding:18px 16px;overflow-x:auto;}
+    table.tbl{min-width:580px;}
+    table.items{min-width:640px;}
+    .stats{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+    .stat{padding:15px 16px;}
+    .stat .val{font-size:22px;margin-top:10px;}
+    .printbar{flex-wrap:wrap;gap:8px;padding:10px 14px;}
+    .dochead,.filterbar{gap:10px;}
+    .search{min-width:0;width:100%;}
+    .modalbox{width:100%;}
+    .paymodal-grid{grid-template-columns:1fr;}
+    .fin-split{gap:14px;}
+  }
+  @media(min-width:861px){ .side-backdrop{display:none !important;} }
+
+  /* Very small phones */
+  @media(max-width:440px){
+    .stats{grid-template-columns:1fr;}
+    .topbar h1{font-size:20px;}
+    .card{padding:16px 13px;}
+  }
+
   /* ---------- auth screen ---------- */
   #authScreen{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:20px;
     background:var(--app-bg);background-attachment:fixed;}
@@ -402,9 +455,13 @@
   </div>
   <div class="foot">UBOLD DESIGN LAB<br>202603238260 (003886944-A)<br>Data: ubold.db</div>
 </div>
+<div class="side-backdrop no-print" id="sideBackdrop" onclick="closeSidebar()"></div>
 
 <div class="main">
   <div class="topbar no-print">
+    <button class="menu-toggle" aria-label="Open menu" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
     <div class="th">
       <div class="eyebrow" id="pageEyebrow"></div>
       <h1 id="pageTitle">Documents</h1>
@@ -761,7 +818,7 @@
     </tr></thead><tbody id="payRows"></tbody></table>
     <div style="margin-top:16px;padding:14px;border:1px solid var(--line,#e5e7eb);border-radius:12px;background:var(--panel,#fafafa)">
       <div style="font-weight:700;margin-bottom:10px">Record a payment</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="paymodal-grid">
         <div class="field"><label class="req">Amount (RM)</label><input id="pay-amount" type="number" min="0" step="0.01" placeholder="0.00"></div>
         <div class="field"><label>Date received</label><input id="pay-date" type="date"></div>
         <div class="field"><label>Method</label>
@@ -806,6 +863,18 @@ function pdfBaseName(type,doc){
 }
 let PREVIEW_MODE = false;      // true when showing an unsaved preview
 let custFormInBuilder = false;
+
+/* ---------- mobile sidebar drawer ---------- */
+function toggleSidebar(){
+  const open=document.querySelector('.side').classList.toggle('open');
+  document.getElementById('sideBackdrop').classList.toggle('show',open);
+}
+function closeSidebar(){
+  document.querySelector('.side').classList.remove('open');
+  document.getElementById('sideBackdrop').classList.remove('show');
+}
+// tapping any nav link closes the drawer on mobile
+document.querySelector('.side .nav').addEventListener('click',e=>{ if(e.target.closest('a')) closeSidebar(); });
 
 const STATUS_OPTS = {
   // 'accepted' is applied automatically when the signed copy is uploaded — not a manual choice.
