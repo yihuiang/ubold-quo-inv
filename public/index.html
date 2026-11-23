@@ -265,9 +265,12 @@
   .d-sign{display:flex;gap:40px;margin-top:40px;}
   .sig-col{flex:1;}
   .sig-cap{font-family:"Segoe UI",Arial,sans-serif;font-size:11px;color:var(--dm);line-height:1.4;}
-  .sig-area{position:relative;min-height:70px;}
-  .sig-area img.sig{max-height:64px;max-width:200px;}
-  .sig-area img.stamp{position:absolute;left:150px;top:-14px;max-height:96px;}
+  .sig-area{position:relative;min-height:70px;text-align:left;}
+  /* signature + stamp laid out together so the stamp hugs the end of the
+     signature with only a small overlap, whatever the signature's width */
+  .sig-stamp{display:inline-flex;align-items:center;}
+  .sig-area img.sig{max-height:64px;max-width:200px;position:relative;z-index:2;}
+  .sig-area img.stamp{max-height:96px;margin-left:-26px;position:relative;z-index:1;}
   .sig-line{border-top:1px solid var(--dt);width:100%;max-width:300px;margin-top:6px;}
   .sig-italic{font-style:italic;color:var(--dt);font-size:12px;}
   .confirm-r{font-family:"Segoe UI",Arial,sans-serif;font-weight:700;color:var(--db);text-align:center;font-size:12px;line-height:1.5;}
@@ -520,7 +523,7 @@
           <span class="resultcount" id="resultCount"></span>
         </div>
         <table class="tbl"><thead><tr>
-          <th>Created</th><th>Type</th><th>Document</th><th>Customer</th><th>Doc date</th><th>Status</th><th style="text-align:right">Amount</th><th></th>
+          <th>Created</th><th>Type</th><th>Document</th><th>Customer</th><th>Doc date</th><th>Status</th><th style="text-align:right">Amount due</th><th></th>
         </tr></thead><tbody id="histRows"></tbody></table>
       </div>
     </div>
@@ -986,13 +989,15 @@ async function loadDocs(){
     QUOTATIONS.forEach(q=>HISTORY.push({
       type:'quotation', id:q.quotation_id, ref:null,
       customer:q.customer_company||q.customer_name||q.customer_id, customer_name:q.customer_name||'',
-      customer_id:q.customer_id, date:q.date, created_at:q.created_at, status:q.status, amount:q.total,
+      customer_id:q.customer_id, date:q.date, created_at:q.created_at, status:q.status,
+      amount:quoteAdvance(q), total:q.total,   // amount = advance due on acceptance; total = full quote value
       locked:q.status==='accepted', signed:!!q.signed_at
     }));
     invs.forEach(iv=>HISTORY.push({
       type:'invoice', id:iv.invoice_id, ref:iv.quotation_id,
       customer:iv.customer_company||iv.customer_name||iv.customer_id, customer_name:iv.customer_name||'',
-      customer_id:iv.customer_id, date:iv.date, created_at:iv.created_at, status:iv.status, amount:iv.balance_due,
+      customer_id:iv.customer_id, date:iv.date, created_at:iv.created_at, status:iv.status,
+      amount:iv.balance_due, total:iv.subtotal,   // amount = balance due now; total = full invoice value
       locked:false, signed:false
     }));
     HISTORY.sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'') || b.id.localeCompare(a.id));
@@ -1091,7 +1096,7 @@ function renderHistory(){
       <td>${esc(h.customer)}<div class="muted" style="font-size:11px">${esc(h.customer_name)}</div></td>
       <td>${fmtDate(h.date)}</td>
       <td><span class="tag ${h.status}">${esc(h.status)}</span></td>
-      <td class="money">${money(h.amount)}</td>
+      <td class="money">${money(h.amount)}${(h.total!=null && +h.total!==+h.amount)?`<div class="muted" style="font-size:10.5px;font-weight:400">of ${money(h.total)}</div>`:''}</td>
       <td><div class="row-actions" style="justify-content:flex-end">
         <button class="btn ghost sm" onclick="openDoc('${h.type}','${h.id}')">Open</button>
         ${h.locked
@@ -2037,7 +2042,7 @@ function sigBlock(){
   const sig = (CURRENT_USER && CURRENT_USER.signature)
     ? `<img class="sig" src="${CURRENT_USER.signature}" alt="signature">`
     : `<img class="sig" src="signature.png" alt="" onerror="this.style.display='none'">`;
-  return sig + `<img class="stamp" src="stamp.png" alt="" onerror="this.style.display='none'">`;
+  return `<span class="sig-stamp">${sig}<img class="stamp" src="stamp.png" alt="" onerror="this.style.display='none'"></span>`;
 }
 
 /* ---------- document template (matches the reference PDFs) ---------- */
@@ -2159,7 +2164,7 @@ function buildDocHTML(type,doc){
     <div class="d-sign" style="justify-content:center;margin-top:60px">
       <div class="sig-col" style="flex:0 0 320px;text-align:center">
         <div class="sig-cap">${COMPANY.name}</div>
-        <div class="sig-area" style="margin:6px auto 0;display:inline-block;width:260px">${sigBlock()}</div>
+        <div class="sig-area" style="margin:6px auto 0;display:inline-block;width:260px;text-align:center">${sigBlock()}</div>
         <div class="sig-cap" style="font-style:italic">Authorised Signature<br>&amp; Company Stamp</div>
       </div>
     </div>
