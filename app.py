@@ -499,15 +499,20 @@ def create_invoice(conn, data):
     iid = next_id(conn, "invoices", "invoice_id", "INV-")
     items = data.get("items", [])
     subtotal = round(sum(compute_line_total(it) for it in items), 2)
-    advance = money(data.get("advance_paid"))
-    if data.get("advance_auto", True) and not data.get("advance_paid"):
+    term = data.get("term", "Balance Due")
+    is_full = "full" in (term or "").strip().lower()  # Full Payment term = whole amount due, no advance
+    if data.get("advance_paid") not in (None, ""):
+        advance = money(data.get("advance_paid"))
+    elif is_full:
+        advance = 0.0
+    else:
         advance = round(subtotal * 0.5, 2)
     balance = round(subtotal - advance, 2)
     conn.execute(
         """INSERT INTO invoices(invoice_id,customer_id,quotation_id,date,term,status,subtotal,advance_paid,balance_due,notes)
            VALUES(?,?,?,?,?,?,?,?,?,?)""",
         (iid, data.get("customer_id"), data.get("quotation_id") or None, data.get("date"),
-         data.get("term", "Balance Due"), data.get("status", "unpaid"),
+         term, data.get("status", "unpaid"),
          subtotal, advance, balance, data.get("notes", "")),
     )
     save_line_items(conn, "invoice", iid, items)
@@ -722,14 +727,14 @@ class Handler(BaseHTTPRequestHandler):
             if get_user_by_email(conn, email):
                 self._json({"error": "An account with this email already exists."}, 400)
                 return True
-            first = count_users(conn) == 0
-            u = create_user(conn, name, email, pw,
-                            role="owner" if first else "member",
-                            status="active" if first else "pending")
-            if first:
-                self._json({"token": make_token(u["user_id"]), "user": public_user(u)}, 201)
-            else:
-                self._json({"pending": True, "user": public_user(u)}, 201)
+            # Self sign-up is only for the very first account (the workspace owner).
+            # After that, the owner creates accounts for everyone else via the Team page.
+            if count_users(conn) != 0:
+                self._json({"error": "Sign-up is disabled. Please ask the workspace owner "
+                                     "to create an account for you."}, 403)
+                return True
+            u = create_user(conn, name, email, pw, role="owner", status="active")
+            self._json({"token": make_token(u["user_id"]), "user": public_user(u)}, 201)
             return True
         if path == "/api/auth/login" and method == "POST":
             u = get_user_by_email(conn, data.get("email"))
@@ -763,6 +768,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._static(path)
         conn = get_db()
         try:
+            # public: does the workspace still need its first (owner) account?
+            if path == "/api/auth/setup":
+                return self._json({"needsSetup": count_users(conn) == 0})
             user = self._current_user(conn)
             if not user:
                 return self._json({"error": "Not authenticated"}, 401)

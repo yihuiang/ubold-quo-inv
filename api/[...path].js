@@ -33,6 +33,10 @@ async function currentUser(req) {
 
 // Returns a response object if handled, else null.
 async function handleAuth(req, res, path, method, body) {
+  if (path === 'auth/setup' && method === 'GET') {
+    // public: does the workspace still need its first (owner) account?
+    return res.status(200).json({ needsSetup: (await countUsers()) === 0 });
+  }
   if (path === 'auth/register' && method === 'POST') {
     const name = String(body.name || '').trim();
     const email = String(body.email || '').trim();
@@ -40,11 +44,13 @@ async function handleAuth(req, res, path, method, body) {
     if (!name || !email || !pw) return res.status(400).json({ error: 'Name, email and password are all required.' });
     if (pw.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
     if (await getUserByEmail(email)) return res.status(400).json({ error: 'An account with this email already exists.' });
-    const first = (await countUsers()) === 0;
-    const u = await createUser(name, email, pw, first ? 'owner' : 'member', first ? 'active' : 'pending');
-    return first
-      ? res.status(201).json({ token: makeToken(u.user_id), user: publicUser(u) })
-      : res.status(201).json({ pending: true, user: publicUser(u) });
+    // Self sign-up is only for the very first account (the workspace owner).
+    // After that, the owner creates accounts for everyone else via the Team page.
+    if ((await countUsers()) !== 0) {
+      return res.status(403).json({ error: 'Sign-up is disabled. Please ask the workspace owner to create an account for you.' });
+    }
+    const u = await createUser(name, email, pw, 'owner', 'active');
+    return res.status(201).json({ token: makeToken(u.user_id), user: publicUser(u) });
   }
   if (path === 'auth/login' && method === 'POST') {
     const u = await getUserByEmail(body.email);
@@ -85,7 +91,7 @@ export default async function handler(req, res) {
     const fullPath = seg.join('/');
 
     // ---- /api/auth/* (no token required for register/login/reset) ----
-    if (seg[0] === 'auth' && ['register', 'login', 'reset'].includes(seg[1])) {
+    if (seg[0] === 'auth' && ['register', 'login', 'reset', 'setup'].includes(seg[1])) {
       const r = await handleAuth(req, res, fullPath, method, body);
       if (r) return r;
       return res.status(404).json({ error: 'unknown endpoint' });

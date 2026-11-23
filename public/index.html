@@ -402,9 +402,9 @@
 <div id="authScreen">
   <div class="authcard">
     <div class="authlogo"><img src="ubold-logo.png" alt="UBOLD"><div class="sub" style="font-size:11px;letter-spacing:.14em;color:var(--ink-soft);font-weight:700">DESIGN&nbsp;LAB</div></div>
-    <div class="authtabs">
+    <div class="authtabs" id="authTabs">
       <button id="tab-login" class="active" onclick="authTab('login')">Sign in</button>
-      <button id="tab-register" onclick="authTab('register')">Create account</button>
+      <button id="tab-register" onclick="authTab('register')" style="display:none">Set up owner account</button>
     </div>
     <div class="auth-err" id="authErr"></div>
     <div class="auth-ok" id="authOk"></div>
@@ -622,10 +622,10 @@
             </div>
           </div>
           <div class="field"><label>Date</label><input type="date" id="b-date"></div>
-          <div class="field"><label>Term</label><select id="b-term"></select></div>
+          <div class="field"><label>Term</label><select id="b-term" onchange="onTermChange()"></select></div>
           <div class="field"><label>Status</label><select id="b-status"></select></div>
           <div class="field inv-only"><label>Ref. Quotation</label><select id="b-refqt" onchange="onRefQtChange()"></select></div>
-          <div class="field inv-only"><label>Advance paid (MYR)</label><input type="number" step="0.01" id="b-advance" oninput="recalc()"></div>
+          <div class="field inv-only" id="advField"><label>Advance paid (MYR)</label><input type="number" step="0.01" id="b-advance" oninput="recalc()"></div>
           <div class="field full" style="grid-column:1/-1"><label>Notes (optional)</label><textarea id="b-notes" placeholder="Any note for this document…"></textarea></div>
         </div>
 
@@ -1531,7 +1531,7 @@ async function newDoc(mode){
   try{ const ids=await api('/api/next-ids'); NEXT_ID=ids[mode];
     document.getElementById('builderId').innerHTML='New '+(mode==='quotation'?'quotation':'invoice')+' — will be saved as <b>'+ids[mode]+'</b>';
   }catch(e){}
-  recalc();
+  applyInvTermUI(); recalc();
 }
 async function newDocFor(mode,cid){ await newDoc(mode); document.getElementById('b-customer').value=cid; }
 
@@ -1592,17 +1592,41 @@ function recalc(){
   document.getElementById('b-subtotal').textContent=money(sub);
   let grand=sub;
   if(MODE==='invoice'){
-    let adv=num(document.getElementById('b-advance').value);
-    if(!document.getElementById('b-advance').value) adv=+(sub*0.5).toFixed(2);
-    document.getElementById('b-adv2').textContent='('+money(adv)+')';
-    grand=+(sub-adv).toFixed(2);
-    document.getElementById('b-grandlbl').textContent='BALANCE DUE';
+    const full=isFullPayInvoice();
+    const advRow=document.querySelector('.totbox .adv');
+    if(full){
+      // Full Payment: whole amount is due, no advance deduction
+      if(advRow) advRow.style.display='none';
+      grand=sub;
+      document.getElementById('b-grandlbl').textContent='TOTAL DUE';
+    }else{
+      if(advRow) advRow.style.display='';
+      let adv=num(document.getElementById('b-advance').value);
+      if(!document.getElementById('b-advance').value) adv=+(sub*0.5).toFixed(2);
+      document.getElementById('b-adv2').textContent='('+money(adv)+')';
+      grand=+(sub-adv).toFixed(2);
+      document.getElementById('b-grandlbl').textContent='BALANCE DUE';
+    }
   }else{
     document.getElementById('b-grandlbl').textContent='TOTAL';
   }
   document.getElementById('b-grand').textContent=money(grand);
   document.getElementById('b-words').textContent=ringgitWords(grand);
 }
+/* true when the invoice uses a Full Payment term (whole amount due, no advance) */
+function isFullPayInvoice(){
+  return MODE==='invoice' && /full/i.test(document.getElementById('b-term').value||'');
+}
+/* show/hide the Advance-paid field + ref-quotation to suit the invoice term */
+function applyInvTermUI(){
+  if(MODE!=='invoice') return;
+  const full=isFullPayInvoice();
+  const advField=document.getElementById('advField');
+  if(advField) advField.style.display = full ? 'none' : '';
+  if(full) document.getElementById('b-advance').value='';
+  recalc();
+}
+function onTermChange(){ applyInvTermUI(); }
 function collectItems(){
   return [...document.querySelectorAll('#itemRows tr')].map(tr=>({
     description:tr.querySelector('.i-desc').value,
@@ -1629,8 +1653,9 @@ async function saveDoc(){
     let doc;
     if(MODE==='invoice'){
       payload.quotation_id=document.getElementById('b-refqt').value||null;
-      const adv=document.getElementById('b-advance').value;
-      if(adv!=='') payload.advance_paid=num(adv);
+      if(isFullPayInvoice()){ payload.advance_paid=0; }  // Full Payment: no advance
+      else { const adv=document.getElementById('b-advance').value;
+        if(adv!=='') payload.advance_paid=num(adv); }
       doc = EDIT_ID ? await api('/api/invoices/'+EDIT_ID,'PUT',payload) : await api('/api/invoices','POST',payload);
     }else{
       doc = EDIT_ID ? await api('/api/quotations/'+EDIT_ID,'PUT',payload) : await api('/api/quotations','POST',payload);
@@ -1746,8 +1771,10 @@ function buildFormDoc(){
   if(MODE==='invoice'){
     d.invoice_id=docNo;
     d.quotation_id=document.getElementById('b-refqt').value||null;
-    let adv=num(document.getElementById('b-advance').value);
-    if(!document.getElementById('b-advance').value) adv=+(sub*0.5).toFixed(2);
+    let adv;
+    if(isFullPayInvoice()){ adv=0; }  // Full Payment: whole amount due, no advance
+    else { adv=num(document.getElementById('b-advance').value);
+      if(!document.getElementById('b-advance').value) adv=+(sub*0.5).toFixed(2); }
     d.advance_paid=adv; d.balance_due=+(sub-adv).toFixed(2);
   }else{
     d.quotation_id=docNo; d.total=+sub.toFixed(2);
@@ -1787,7 +1814,7 @@ function editCurrent(){
     if(type==='invoice'){ fillRefQt(doc.quotation_id||''); document.getElementById('b-advance').value=doc.advance_paid??''; }
     document.getElementById('itemRows').innerHTML='';
     (doc.items||[]).forEach(addItem); if(!doc.items||!doc.items.length) addItem();
-    recalc();
+    applyInvTermUI(); recalc();
   });
 }
 async function editDoc(type,id){
@@ -2020,6 +2047,10 @@ function buildDocHTML(type,doc){
   const items=doc.items||[];
   const sub=items.reduce((s,it)=>s+itemNet(it),0);
   const grand = isInv? (doc.balance_due) : (doc.total||sub);
+  // A Balance-Due invoice has an advance already paid (shown as a deduction).
+  // A Full-Payment / direct invoice has no advance — the whole amount is due.
+  const hasAdvance = isInv && (+doc.advance_paid||0) > 0;
+  const invDue = isInv ? (hasAdvance ? (+doc.balance_due||0) : sub) : grand;
   const docNo = isInv? doc.invoice_id : doc.quotation_id;
   const cParts=(c.company||'').split(/\s{2,}/);
   const coMain=cParts[0]||'', coCn=cParts.slice(1).join(' ');
@@ -2058,22 +2089,23 @@ function buildDocHTML(type,doc){
   const metaP2 = (isInv?metaRow('Invoice No',docNo):metaRow('Quotation No',docNo))+metaRow('Customer ID',doc.customer_id)+metaRow('Date',fmtDate(doc.date))+metaRow('Page','2 of 2')+(isInv?'':metaRow('Term',doc.term||''));
 
   const intro = isInv
-    ? `<div class="greet">Dear ${esc(c.name||'')}</div><p>It's been a pleasure bringing your vision to life!</p><p>Our project is now wrapped up and delivered, and we couldn't be happier with how it turned out. Please find the final invoice for the remaining balance below and if you've already sent it through, please disregard this note with our thanks!</p>`
+    ? `<div class="greet">Dear ${esc(c.name||'')}</div><p>It's been a pleasure bringing your vision to life!</p><p>Our project is now wrapped up and delivered, and we couldn't be happier with how it turned out. Please find the ${hasAdvance?'final invoice for the remaining balance':'invoice for the full amount'} below and if you've already sent it through, please disregard this note with our thanks!</p>`
     : `<div class="greet">Dear ${esc(c.name||'')}</div><p>Thank you for your interest in our service.</p><p>We are pleased to provide you with the following quotation based on your requirements. Please find the details below:</p>`;
 
   const advPct = sub>0? Math.round((doc.advance_paid||0)/sub*100):50;
+  const dueLabel = hasAdvance ? 'Balance Due' : 'Total Due';
   const qtTotal = doc.total||sub;
   const qtAdvPct = advPctOf(doc.term);
   const qtAdvAmt = +(qtTotal*qtAdvPct/100).toFixed(2);
-  const tncPct = isInv ? advPct : qtAdvPct;
+  const tncPct = isInv ? (hasAdvance ? advPct : 100) : qtAdvPct;
   const totals = isInv
     ? `<div style="display:flex;justify-content:flex-end;margin-top:14px"><div class="d-tot">
          <div class="tr"><span>Subtotal</span><span class="v">${n2(sub)}</span></div>
-         <div class="tr"><span>Less: Advance Paid (${advPct}%)</span><span class="v">(${n2(doc.advance_paid)})</span></div>
-         <div class="tr bold"><span>Balance Due</span><span class="v">${n2(doc.balance_due)}</span></div>
+         ${hasAdvance?`<div class="tr"><span>Less: Advance Paid (${advPct}%)</span><span class="v">(${n2(doc.advance_paid)})</span></div>`:''}
+         <div class="tr bold"><span>${dueLabel}</span><span class="v">${n2(invDue)}</span></div>
        </div></div>
-       <div class="d-totwrap"><div class="d-words">${ringgitWords(grand)}</div>
-         <div class="d-totbox">Balance Due&nbsp;&nbsp;&nbsp;MYR ${n2(doc.balance_due)}</div></div>`
+       <div class="d-totwrap"><div class="d-words">${ringgitWords(invDue)}</div>
+         <div class="d-totbox">${dueLabel}&nbsp;&nbsp;&nbsp;MYR ${n2(invDue)}</div></div>`
     : `<div class="d-totwrap"><div class="d-words">${ringgitWords(grand)}</div>
          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
            <div class="d-totline"><span class="lbl">Total</span><span class="d-totbox">${n2(qtTotal)}</span></div>
@@ -2184,8 +2216,24 @@ const EYE_OFF='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" strok
 function togglePw(btn,id){ const inp=document.getElementById(id); const show=inp.type==='password'; inp.type=show?'text':'password'; btn.innerHTML=show?EYE_OFF:EYE; btn.setAttribute('aria-label', show?'Hide password':'Show password'); }
 document.querySelectorAll('.pweye').forEach(b=>b.innerHTML=EYE);
 
-function showAuth(){ document.getElementById('authScreen').classList.add('show'); document.getElementById('userMenu').style.display='none'; }
+function showAuth(){ document.getElementById('authScreen').classList.add('show'); document.getElementById('userMenu').style.display='none'; applySignupMode(); }
 function hideAuth(){ document.getElementById('authScreen').classList.remove('show'); document.getElementById('userMenu').style.display=''; }
+/* Self sign-up is only offered for the very first (owner) account. Once any
+   account exists, the "Create account" tab is hidden — the owner hands out
+   accounts via the Team page. */
+async function applySignupMode(){
+  let needs=false;
+  try{ const r=await api('/api/auth/setup'); needs=!!r.needsSetup; }catch(e){ needs=false; }
+  const tabs=document.getElementById('authTabs');
+  const regTab=document.getElementById('tab-register');
+  if(needs){
+    regTab.style.display=''; tabs.style.display='';
+    authTab('register');
+  }else{
+    regTab.style.display='none'; tabs.style.display='none';
+    authTab('login');
+  }
+}
 function authTab(which){
   ['login','register','forgot'].forEach(f=>{ const el=document.getElementById('form-'+f); if(el) el.classList.toggle('active', f===which); });
   document.getElementById('tab-login').classList.toggle('active', which!=='register');
